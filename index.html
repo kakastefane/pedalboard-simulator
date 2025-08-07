@@ -158,59 +158,41 @@
     <script type="module">
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHHDUwEtbydNom3TBrqvAfOINpAU01ma4",
+            authDomain: "pedalboard-simulator.firebaseapp.com",
+            projectId: "pedalboard-simulator",
+            storageBucket: "pedalboard-simulator.firebasestorage.app",
+            messagingSenderId: "649553293705",
+            appId: "1:649553293705:web:b2f623fe263252264e7158",
+            measurementId: "G-CS6EZM2X9M"
+        };
 
         // Initialize Firebase
-        let app;
-        let db;
-        let auth;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = firebaseConfig.projectId; // Use projectId as appId for Firestore path consistency
         let userId = null; // Will store the authenticated user ID
 
-        // Initialize Firebase and authenticate
-        async function initializeFirebase() {
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
+        // Authenticate anonymously
+        signInAnonymously(auth)
+            .then((userCredential) => {
+                userId = userCredential.user.uid;
+                console.log("Firebase initialized and user authenticated:", userId);
+                loadPedalboardFromUrl(); // Now that Firebase is ready, try to load from URL
+            })
+            .catch((error) => {
+                console.error("Error signing in anonymously:", error);
+                showCustomAlert("Erro ao autenticar no Firebase. Algumas funcionalidades podem não estar disponíveis.");
+                loadElements(); // Fallback to local storage if Firebase fails
+            });
 
-                // Sign in anonymously or with custom token
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        console.log("Firebase initialized and user authenticated:", userId);
-                        // Now that Firebase is ready and user is authenticated,
-                        // check if there's a boardId in the URL to load a shared board.
-                        loadPedalboardFromUrl();
-                    } else {
-                        console.log("No user signed in.");
-                        userId = null;
-                        // If no user (e.g., anonymous sign-in failed), load from local storage as fallback
-                        loadElements();
-                    }
-                });
-            } catch (error) {
-                console.error("Error initializing Firebase or authenticating:", error);
-                showCustomAlert("Erro ao inicializar o Firebase. Algumas funcionalidades podem não estar disponíveis.");
-                // Fallback to local storage if Firebase fails
-                loadElements();
-            }
-        }
-
-        // Call Firebase initialization
-        initializeFirebase();
-
+        // The rest of your existing JavaScript code follows...
 
         const canvas = document.getElementById('pedalboardCanvas');
         const ctx = canvas.getContext('2d');
@@ -767,13 +749,13 @@
                             elements.push(draggedElement);
                         }
                     }
-                    drawElements(); // Redraw to place the dragged element on top
+                    drawElements();
                     break;
                 }
             }
             if (!clickedOnElement) {
-                selectedElement = null; // Clear selection if clicked outside elements
-                drawElements(); // Redraw to remove selection highlight
+                selectedElement = null; // Limpa a seleção se clicou fora dos elementos
+                drawElements(); // Redesenha para remover o destaque de seleção
             }
         });
 
