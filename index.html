@@ -27,40 +27,30 @@
         #pedalboardCanvas.dragging {
             cursor: grabbing;
         }
-        .input-field {
-            @apply p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white;
-        }
-        .btn {
-            @apply px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2;
-        }
-        .btn-primary {
-            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
-        }
-        .btn-danger {
-            @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
-        }
-        .btn-secondary {
-            @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
-        }
-        /* Style for the share URL modal */
-        .share-modal {
-            @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden;
-        }
-        .share-modal-content {
-            @apply bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center;
-        }
-        .share-modal-content input {
-            @apply input-field w-full mb-4 text-center;
-        }
-        .share-modal-content button {
-            @apply btn btn-primary w-full;
-        }
         /* Fixed Share Button */
         #shareBoardBtn {
-            @apply fixed bottom-4 right-4 bg-purple-600 text-white p-4 rounded-full shadow-lg z-40 flex items-center justify-center; /* Added flex for icon centering */
-            @apply hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200;
+            position: fixed;
+            bottom: 1rem; /* 16px */
+            right: 1rem; /* 16px */
+            background-color: #8b5cf6; /* Purple */
+            color: white;
+            padding: 1rem; /* 16px */
+            border-radius: 9999px; /* Full rounded */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* lg shadow */
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
             width: 60px; /* Make it a fixed size circle */
             height: 60px;
+        }
+        #shareBoardBtn:hover {
+            background-color: #7c3aed; /* Darker purple on hover */
+        }
+        #shareBoardBtn:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.4); /* Purple ring on focus */
         }
         #shareBoardBtn i {
             font-size: 1.5rem; /* Icon size */
@@ -81,19 +71,19 @@
             <div class="space-y-4">
                 <div>
                     <label for="boardName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Board:</label>
-                    <input type="text" id="boardName" class="input-field w-full" placeholder="Ex: Meu Board Principal">
+                    <input type="text" id="boardName" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" placeholder="Ex: Meu Board Principal">
                 </div>
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label for="boardWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
-                        <input type="number" id="boardWidth" class="input-field w-full" value="60" min="1">
+                        <input type="number" id="boardWidth" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="60" min="1">
                     </div>
                     <div class="flex-1">
                         <label for="boardHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
-                        <input type="number" id="boardHeight" class="input-field w-full" value="30" min="1">
+                        <input type="number" id="boardHeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="30" min="1">
                     </div>
                 </div>
-                <button id="addBoardBtn" class="btn btn-secondary w-full mt-4">Adicionar Pedalboard</button>
+                <button id="addBoardBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 w-full mt-4">Adicionar Pedalboard</button>
             </div>
 
             <hr class="my-8 border-gray-700">
@@ -103,23 +93,23 @@
             <div class="space-y-4">
                 <div>
                     <label for="pedalName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Pedal:</label>
-                    <input type="text" id="pedalName" class="input-field w-full" placeholder="Ex: Overdrive">
+                    <input type="text" id="pedalName" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" placeholder="Ex: Overdrive">
                 </div>
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label for="pedalWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
-                        <input type="number" id="pedalWidth" class="input-field w-full" value="7" min="1">
+                        <input type="number" id="pedalWidth" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="7" min="1">
                     </div>
                     <div class="flex-1">
                         <label for="pedalHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
-                        <input type="number" id="pedalHeight" class="input-field w-full" value="12" min="1">
+                        <input type="number" id="pedalHeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="12" min="1">
                     </div>
                 </div>
                 <div>
                     <label for="pedalColor" class="block text-sm font-medium text-gray-300 mb-1">Cor do Pedal:</label>
                     <input type="color" id="pedalColor" class="w-full h-10 rounded-md cursor-pointer" value="#3498db">
                 </div>
-                <button id="addPedalBtn" class="btn btn-primary w-full mt-4">Adicionar Pedal</button>
+                <button id="addPedalBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full mt-4">Adicionar Pedal</button>
             </div>
 
             <hr class="my-8 border-gray-700">
@@ -128,11 +118,11 @@
             <div class="space-y-4">
                 <div>
                     <label for="scaleInput" class="block text-sm font-medium text-gray-300 mb-1">Pixels por cm:</label>
-                    <input type="number" id="scaleInput" class="input-field w-full" value="15" min="1">
+                    <input type="number" id="scaleInput" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="15" min="1">
                 </div>
             </div>
 
-            <button id="clearBoardBtn" class="btn btn-danger w-full mt-4">Limpar Tudo</button>
+            <button id="clearBoardBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 w-full mt-4">Limpar Tudo</button>
         </aside>
 
         <!-- Área do Canvas (Pedalboard) -->
@@ -156,12 +146,12 @@
     </footer>
 
     <!-- Share URL Modal -->
-    <div id="shareModal" class="share-modal">
-        <div class="share-modal-content">
+    <div id="shareModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
             <h3 class="text-xl font-semibold text-white mb-4">Compartilhe seu Pedalboard!</h3>
-            <input type="text" id="shareUrlInput" readonly class="input-field mb-4">
-            <button id="copyShareUrlBtn" class="btn btn-primary">Copiar URL</button>
-            <button id="closeShareModalBtn" class="btn btn-secondary mt-2">Fechar</button>
+            <input type="text" id="shareUrlInput" readonly class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full mb-4 text-center">
+            <button id="copyShareUrlBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full">Copiar URL</button>
+            <button id="closeShareModalBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 w-full mt-2">Fechar</button>
         </div>
     </div>
 
@@ -240,10 +230,6 @@
         const pedalColorInput = document.getElementById('pedalColor');
 
         const scaleInput = document.getElementById('scaleInput');
-
-        // Removed minRequiredWidthDisplay and minRequiredHeightDisplay as they are not in the HTML
-        // const minRequiredWidthDisplay = document.getElementById('minRequiredWidthDisplay');
-        // const minRequiredHeightDisplay = document.getElementById('minRequiredHeightDisplay');
 
         const sidebar = document.getElementById('sidebar');
         const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
@@ -987,7 +973,7 @@
                 modal.innerHTML = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
                         <p class="text-lg font-semibold text-white mb-4" id="custom-alert-message"></p>
-                        <button id="custom-alert-ok-btn" class="btn btn-primary w-full">OK</button>
+                        <button id="custom-alert-ok-btn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full">OK</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
