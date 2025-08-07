@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Pedalboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+            overflow: hidden; /* Prevent body scroll, canvas handles pan */
+        }
+        #pedalboardCanvas {
+            background-color: #2d3748; /* Darker gray for canvas background */
+            border: 2px solid #4a5568;
+            cursor: grab;
+            touch-action: none; /* Prevent default touch actions like scrolling/zooming */
+            display: block; /* Ensures no extra space below canvas */
+            /* Canvas dimensions will be set by JS to fill available space */
+        }
+        #pedalboardCanvas.dragging {
+            cursor: grabbing;
+        }
+        .input-field {
+            @apply p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white;
+        }
+        .btn {
+            @apply px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+        }
+        .btn-danger {
+            @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen relative">
+    <header class="bg-gray-800 p-4 shadow-md z-10">
+        <h1 class="text-3xl font-bold text-center text-blue-400">Simulador de Pedalboard</h1>
+    </header>
+
+    <main class="flex flex-1 relative">
+        <!-- Painel de Controle (Sidebar) -->
+        <aside id="sidebar" class="fixed top-0 left-0 h-full w-full lg:w-1/4 bg-gray-800 p-6 shadow-lg z-20 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-in-out">
+            <button id="closeSidebarBtn" class="absolute top-4 right-4 text-gray-300 hover:text-white text-2xl">&times;</button>
+
+            <h2 class="text-2xl font-semibold mb-6 text-blue-300">Adicionar Pedalboard</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="boardName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Board:</label>
+                    <input type="text" id="boardName" class="input-field w-full" placeholder="Ex: Meu Board Principal">
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label for="boardWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
+                        <input type="number" id="boardWidth" class="input-field w-full" value="60" min="1">
+                    </div>
+                    <div class="flex-1">
+                        <label for="boardHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
+                        <input type="number" id="boardHeight" class="input-field w-full" value="30" min="1">
+                    </div>
+                </div>
+                <button id="addBoardBtn" class="btn btn-secondary w-full mt-4">Adicionar Pedalboard</button>
+            </div>
+
+            <hr class="my-8 border-gray-700">
+
+            <h2 class="text-2xl font-semibold mb-6 text-blue-300">Adicionar Pedal</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="pedalName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Pedal:</label>
+                    <input type="text" id="pedalName" class="input-field w-full" placeholder="Ex: Overdrive">
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label for="pedalWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
+                        <input type="number" id="pedalWidth" class="input-field w-full" value="7" min="1">
+                    </div>
+                    <div class="flex-1">
+                        <label for="pedalHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
+                        <input type="number" id="pedalHeight" class="input-field w-full" value="12" min="1">
+                    </div>
+                </div>
+                <div>
+                    <label for="pedalColor" class="block text-sm font-medium text-gray-300 mb-1">Cor do Pedal:</label>
+                    <input type="color" id="pedalColor" class="w-full h-10 rounded-md cursor-pointer" value="#3498db">
+                </div>
+                <!-- Removed pedal image input -->
+                <button id="addPedalBtn" class="btn btn-primary w-full mt-4">Adicionar Pedal</button>
+            </div>
+
+            <hr class="my-8 border-gray-700">
+
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Configurar Escala</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="scaleInput" class="block text-sm font-medium text-gray-300 mb-1">Pixels por cm:</label>
+                    <input type="number" id="scaleInput" class="input-field w-full" value="15" min="1">
+                </div>
+            </div>
+
+            <hr class="my-8 border-gray-700">
+
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Informações do Layout</h2>
+            <div class="bg-gray-700 p-4 rounded-md shadow-inner">
+                <p class="text-gray-300 mb-2">Largura Mínima Necessária: <span id="minRequiredWidthDisplay" class="font-bold text-white">0 cm</span></p>
+                <p class="text-gray-300">Altura Mínima Necessária: <span id="minRequiredHeightDisplay" class="font-bold text-white">0 cm</span></p>
+            </div>
+
+            <button id="clearBoardBtn" class="btn btn-danger w-full mt-6">Limpar Tudo</button>
+        </aside>
+
+        <!-- Área do Canvas (Pedalboard) -->
+        <section id="canvas-section" class="absolute top-0 bottom-0 right-0 left-0 flex items-center justify-center transition-all duration-300 ease-in-out">
+            <canvas id="pedalboardCanvas" class="rounded-lg"></canvas>
+        </section>
+
+        <!-- Toggle Button for Sidebar -->
+        <button id="toggleSidebarBtn" class="fixed top-4 left-4 bg-blue-600 text-white p-2 rounded-md shadow-lg z-30">
+            Menu
+        </button>
+    </main>
+
+    <footer class="bg-gray-800 p-4 text-center text-gray-400 text-sm shadow-inner mt-4">
+        &copy; 2025 Simulador de Pedalboard. Todos os direitos reservados.
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('pedalboardCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const addBoardBtn = document.getElementById('addBoardBtn');
+        const addPedalBtn = document.getElementById('addPedalBtn');
+        const clearBoardBtn = document.getElementById('clearBoardBtn');
+
+        const boardNameInput = document.getElementById('boardName');
+        const boardWidthInput = document.getElementById('boardWidth');
+        const boardHeightInput = document.getElementById('boardHeight');
+
+        const pedalNameInput = document.getElementById('pedalName');
+        const pedalWidthInput = document.getElementById('pedalWidth');
+        const pedalHeightInput = document.getElementById('pedalHeight');
+        const pedalColorInput = document.getElementById('pedalColor');
+        // Removed pedalImageInput
+
+        const scaleInput = document.getElementById('scaleInput');
+
+        const minRequiredWidthDisplay = document.getElementById('minRequiredWidthDisplay');
+        const minRequiredHeightDisplay = document.getElementById('minRequiredHeightDisplay');
+
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const canvasSection = document.getElementById('canvas-section');
+
+        let elements = []; // Array para armazenar todos os elementos (pedalboards e pedais)
+        let isDragging = false;
+        let draggedElement = null;
+        let selectedElement = null;
+        let offsetXCm, offsetYCm; // Offset em cm
+
+        // Escala: número de pixels que equivalem a 1 cm
+        let pixelsPerCm = parseFloat(scaleInput.value); // Initialize from input value
+
+        /**
+         * Converts a hexadecimal color string to its RGB components.
+         * @param {string} hex - The hexadecimal color string (e.g., "#RRGGBB").
+         * @returns {number[]} An array containing [R, G, B] values (0-255).
+         */
+        function hexToRgb(hex) {
+            const r = parseInt(hex.substring(1, 3), 16);
+            const g = parseInt(hex.substring(3, 5), 16);
+            const b = parseInt(hex.substring(5, 7), 16);
+            return [r, g, b];
+        }
+
+        /**
+         * Calculates the relative luminance of an sRGB color.
+         * Based on WCAG 2.0 formula.
+         * @param {number} r - Red component (0-255).
+         * @param {number} g - Green component (0-255).
+         * @param {number} b - Blue component (0-255).
+         * @returns {number} The relative luminance (0-1).
+         */
+        function getLuminance(r, g, b) {
+            const sRGB = [r / 255, g / 255, b / 255];
+            const linearRGB = sRGB.map(c => {
+                if (c <= 0.03928) {
+                    return c / 12.92;
+                }
+                return Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * linearRGB[0] + 0.7152 * linearRGB[1] + 0.0722 * linearRGB[2];
+        }
+
+        /**
+         * Determines the best contrasting text color (black or white) for a given background color.
+         * @param {string} backgroundColor - The background color in hexadecimal format (e.g., "#RRGGBB").
+         * @returns {string} "#000000" (black) or "#FFFFFF" (white).
+         */
+        function getContrastColor(backgroundColor) {
+            const [r, g, b] = hexToRgb(backgroundColor);
+            const luminance = getLuminance(r, g, b);
+            return luminance > 0.179 ? '#000000' : '#FFFFFF';
+        }
+
+
+        // Função para ajustar o tamanho do canvas
+        function resizeCanvas() {
+            const headerHeight = document.querySelector('header').offsetHeight;
+            const footerHeight = document.querySelector('footer').offsetHeight;
+
+            // Available height for main content area
+            const availableHeight = window.innerHeight - headerHeight - footerHeight;
+
+            // Available width for main content area (considering sidebar)
+            let availableWidth = window.innerWidth;
+            const sidebarWidth = sidebar.offsetWidth; // Get actual sidebar width
+
+            // Adjust canvas position and width based on sidebar visibility
+            if (!sidebar.classList.contains('-translate-x-full')) { // If sidebar is visible
+                // For desktop, canvas shifts to the right
+                if (window.innerWidth >= 1024) {
+                    availableWidth -= sidebarWidth;
+                    canvasSection.style.left = `${sidebarWidth}px`;
+                } else { // For mobile, sidebar overlays, canvas stays full width
+                    canvasSection.style.left = '0';
+                }
+            } else { // If sidebar is hidden
+                canvasSection.style.left = '0';
+            }
+
+            // Set canvas dimensions to fill the available space
+            canvas.width = availableWidth;
+            canvas.height = availableHeight;
+
+            drawElements(); // Redraw elements with the new scale
+        }
+
+        // Add event listener for window resize
+        window.addEventListener('resize', resizeCanvas);
+        // Call resizeCanvas on initial page load
+        window.onload = () => {
+            pixelsPerCm = parseFloat(scaleInput.value); // Ensure correct initial value
+            loadElements(); // Load elements from localStorage
+            resizeCanvas();
+            // Initial check for sidebar visibility on load for desktop
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                resizeCanvas();
+            }
+        };
+
+        // Event listener for scale input change
+        scaleInput.addEventListener('input', () => {
+            const newScale = parseFloat(scaleInput.value);
+            if (!isNaN(newScale) && newScale > 0) {
+                pixelsPerCm = newScale;
+                drawElements(); // Redraw elements with the new scale
+            }
+        });
+
+        // Function to save elements to localStorage
+        function saveElements() {
+            const simplifiedElements = elements.map(el => {
+                const savedEl = { ...el }; // Copy all properties
+                // Remove image-related properties as they are no longer used
+                delete savedEl.image;
+                delete savedEl.imageDataUrl;
+                delete savedEl.originalWidth;
+                delete savedEl.originalHeight;
+                return savedEl;
+            });
+            localStorage.setItem('pedalboardElements', JSON.stringify(simplifiedElements));
+        }
+
+        // Function to load elements from localStorage
+        function loadElements() {
+            const storedElements = localStorage.getItem('pedalboardElements');
+            if (storedElements) {
+                const loadedData = JSON.parse(storedElements);
+                elements = []; // Clear current elements
+
+                loadedData.forEach(data => {
+                    const el = { ...data }; // Copy stored data
+                    // Ensure rotation angle is initialized for older saved data
+                    if (typeof el.currentRotationAngle === 'undefined') {
+                        el.currentRotationAngle = 0;
+                    }
+                    // Remove image-related properties if they exist in old data
+                    delete el.image;
+                    delete el.imageDataUrl;
+                    delete el.originalWidth;
+                    delete el.originalHeight;
+
+                    elements.push(el);
+                });
+                drawElements(); // Redraw after loading elements
+            } else {
+                drawElements(); // Draw empty canvas if no stored elements
+            }
+        }
+
+
+        // Function to draw all elements on the canvas
+        function drawElements() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            // Draw a background for the entire canvas area
+            ctx.fillStyle = '#2d3748'; // Canvas background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let minXCm = Infinity, minYCm = Infinity;
+            let maxXCm = 0, maxYCm = 0;
+
+            // Filter only pedals to calculate minimum required size
+            const pedalsOnly = elements.filter(el => !el.isBoard);
+
+            // Draw elements: boards first (background), then pedals (foreground)
+            elements.sort((a, b) => (a.isBoard === b.isBoard) ? 0 : a.isBoard ? -1 : 1).forEach(el => {
+                const widthPx = el.width * pixelsPerCm;
+                const heightPx = el.height * pixelsPerCm;
+                const xPx = el.x * pixelsPerCm;
+                const yPx = el.y * pixelsPerCm;
+
+                // Draw element color
+                ctx.fillStyle = el.color;
+                ctx.fillRect(xPx, yPx, widthPx, heightPx);
+
+                // Determine text color based on background color
+                const textColor = getContrastColor(el.color);
+                ctx.fillStyle = textColor;
+
+                // Draw element name
+                ctx.font = `${(el.isBoard ? 16 : 12)}px Inter`; // Fixed font size based on pixelsPerCm
+                ctx.textAlign = 'center';
+                ctx.fillText(el.name, xPx + widthPx / 2, yPx + heightPx / 2 + (el.isBoard ? 8 : 5));
+
+                // Draw dimensions below the name
+                ctx.font = `${(el.isBoard ? 10 : 9)}px Inter`; // Smaller font for dimensions
+                ctx.fillText(`${el.width.toFixed(1)}x${el.height.toFixed(1)} cm`, xPx + widthPx / 2, yPx + heightPx / 2 + (el.isBoard ? 20 : 15));
+
+
+                // Draw element border
+                // Add selection highlight
+                if (selectedElement && selectedElement.id === el.id) {
+                    ctx.strokeStyle = '#a78bfa'; // Purple for selected
+                    ctx.lineWidth = el.isBoard ? 5 : 4; // Thicker border for selected
+                } else {
+                    ctx.strokeStyle = el.isBoard ? '#718096' : '#cbd5e0'; // Different border color for board
+                    ctx.lineWidth = el.isBoard ? 3 : 2; // Different border thickness for board
+                }
+                ctx.strokeRect(xPx, yPx, widthPx, heightPx);
+
+                // Draw rotation icon if element is selected (only for pedals, not boards)
+                if (selectedElement && selectedElement.id === el.id && !el.isBoard) {
+                    const iconSizePx = 24; // Size of the clickable icon square
+                    // Position the icon at the top-right corner of the element
+                    const iconX = xPx + widthPx - iconSizePx / 2;
+                    const iconY = yPx - iconSizePx / 2;
+
+                    // Store icon position for click detection
+                    selectedElement.rotationIconRect = {
+                        x: iconX,
+                        y: iconY,
+                        width: iconSizePx,
+                        height: iconSizePx
+                    };
+
+                    // Draw a circle for the icon background
+                    ctx.fillStyle = '#6366f1'; // Indigo color
+                    ctx.beginPath();
+                    ctx.arc(iconX + iconSizePx / 2, iconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Draw a simple arrow or refresh icon
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.font = `${iconSizePx * 0.7}px sans-serif`; // Adjust font size for icon
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('↻', iconX + iconSizePx / 2, iconY + iconSizePx / 2 + 1); // Unicode refresh symbol
+                } else {
+                    // Clear rotationIconRect if not selected or if it's a board
+                    if (el.rotationIconRect) {
+                        delete el.rotationIconRect;
+                    }
+                }
+            });
+
+            // Calculate minimum required size only for pedals
+            if (pedalsOnly.length > 0) {
+                minXCm = Math.min(...pedalsOnly.map(p => p.x));
+                minYCm = Math.min(...pedalsOnly.map(p => p.y));
+                maxXCm = Math.max(...pedalsOnly.map(p => p.x + p.width));
+                maxYCm = Math.max(...pedalsOnly.map(p => p.y + p.height));
+
+                const requiredWidth = (maxXCm - minXCm).toFixed(1);
+                const requiredHeight = (maxYCm - minYCm).toFixed(1);
+
+                minRequiredWidthDisplay.textContent = `${requiredWidth} cm`;
+                minRequiredHeightDisplay.textContent = `${requiredHeight} cm`;
+            } else {
+                minRequiredWidthDisplay.textContent = `0 cm`;
+                minRequiredHeightDisplay.textContent = `0 cm`;
+            }
+        }
+
+        // Function to add a new pedalboard
+        addBoardBtn.addEventListener('click', () => {
+            const name = boardNameInput.value.trim();
+            const width = parseFloat(boardWidthInput.value);
+            const height = parseFloat(boardHeightInput.value);
+
+            if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                showCustomAlert('Por favor, preencha o nome, largura e altura do pedalboard corretamente.');
+                return;
+            }
+
+            const newBoard = {
+                id: Date.now(),
+                name: name,
+                width: width,
+                height: height,
+                x: 10, // Initial position in cm
+                y: 10, // Initial position in cm
+                color: '#000000', // Fixed to black
+                isBoard: true, // Property to identify as a board
+                currentRotationAngle: 0 // Initialize rotation angle
+            };
+
+            elements.push(newBoard);
+            drawElements();
+            saveElements(); // Save after adding
+
+            // Clear input fields
+            boardNameInput.value = '';
+            boardWidthInput.value = '60';
+            boardHeightInput.value = '30';
+        });
+
+        // Function to add a new pedal
+        addPedalBtn.addEventListener('click', () => {
+            const name = pedalNameInput.value.trim();
+            const width = parseFloat(pedalWidthInput.value);
+            const height = parseFloat(pedalHeightInput.value);
+            const color = pedalColorInput.value;
+            // Removed imageFile and pedalImageInput.files[0]
+
+            if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                showCustomAlert('Por favor, preencha o nome, largura e altura do pedal corretamente.');
+                return;
+            }
+
+            const newPedal = {
+                id: Date.now(),
+                name: name,
+                width: width,
+                height: height,
+                x: 2, // Initial position in cm
+                y: 2, // Initial position in cm
+                color: color,
+                isBoard: false, // Property to identify as a pedal
+                currentRotationAngle: 0 // Initialize rotation angle
+            };
+
+            elements.push(newPedal);
+            drawElements();
+            saveElements(); // Save after adding
+
+            // Clear input fields
+            pedalNameInput.value = '';
+            pedalWidthInput.value = '7';
+            pedalHeightInput.value = '12';
+            pedalColorInput.value = '#3498db';
+            // Removed pedalImageInput.value = '';
+        });
+
+        // Function to clear all elements
+        clearBoardBtn.addEventListener('click', () => {
+            elements = [];
+            selectedElement = null; // Clear selection
+            drawElements();
+            saveElements(); // Save after clearing
+        });
+
+        // Drag and drop logic (Mouse)
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Check if clicked on rotation icon first
+            if (selectedElement && selectedElement.rotationIconRect) {
+                const iconRect = selectedElement.rotationIconRect;
+                if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
+                    mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
+                    // Clicked on rotation icon
+                    [selectedElement.width, selectedElement.height] = [selectedElement.height, selectedElement.width];
+                    // Update rotation angle by 90 degrees (PI/2 radians)
+                    selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
+                    drawElements();
+                    saveElements(); // Save after rotation
+                    isDragging = false; // Prevent dragging after rotation
+                    draggedElement = null;
+                    canvas.classList.remove('dragging');
+                    return; // Stop further processing
+                }
+            }
+
+            // Convert mouse coordinates from pixels to cm using the fixed scale
+            const mouseXCm = mouseX / pixelsPerCm;
+            const mouseYCm = mouseY / pixelsPerCm;
+
+            let clickedOnElement = false;
+            // Iterate over elements from back to front to pick the top element
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const el = elements[i];
+                const elWidthCm = el.width;
+                const elHeightCm = el.height;
+
+                if (mouseXCm >= el.x && mouseXCm <= el.x + elWidthCm &&
+                    mouseYCm >= el.y && mouseYCm <= el.y + elHeightCm) {
+                    isDragging = true;
+                    draggedElement = el;
+                    selectedElement = el; // Set selected element
+                    clickedOnElement = true;
+
+                    // Calculate offset in cm
+                    offsetXCm = mouseXCm - el.x;
+                    offsetYCm = mouseYCm - el.y;
+                    canvas.classList.add('dragging');
+
+                    // Move the dragged element to the end of the array so it's drawn last (on top)
+                    // Except if it's a board and there are other non-board elements on top of it
+                    if (!el.isBoard) { // Only move pedais to the top
+                        elements.splice(i, 1);
+                        elements.push(draggedElement);
+                    } else { // If it's a board, check if there are pedais on top of it
+                        const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
+                            (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
+                             otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
+                        );
+                        if (hasPedalsAbove) {
+                            isDragging = false;
+                            draggedElement = null;
+                            canvas.classList.remove('dragging');
+                            showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
+                            return;
+                        }
+                        elements.splice(i, 1);
+                        const firstPedalIndex = elements.findIndex(item => !item.isBoard);
+                        if (firstPedalIndex !== -1) {
+                            elements.splice(firstPedalIndex, 0, draggedElement);
+                        } else {
+                            elements.push(draggedElement);
+                        }
+                    }
+                    drawElements(); // Redraw to place the dragged element on top
+                    break;
+                }
+            }
+            if (!clickedOnElement) {
+                selectedElement = null; // Clear selection if clicked outside elements
+                drawElements(); // Redraw to remove selection highlight
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !draggedElement) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Convert mouse coordinates from pixels to cm using the fixed scale
+            const mouseXCm = mouseX / pixelsPerCm;
+            const mouseYCm = mouseY / pixelsPerCm;
+
+            // Calculate new element position in cm
+            let newXCm = mouseXCm - offsetXCm;
+            let newYCm = mouseYCm - offsetYCm;
+
+            // Limit the element within the canvas boundaries (in cm)
+            const elementWidthCm = draggedElement.width;
+            const elementHeightCm = draggedElement.height;
+
+            newXCm = Math.max(0, Math.min(newXCm, canvas.width / pixelsPerCm - elementWidthCm));
+            newYCm = Math.max(0, Math.min(newYCm, canvas.height / pixelsPerCm - elementHeightCm));
+
+            draggedElement.x = newXCm;
+            draggedElement.y = newYCm;
+
+            drawElements();
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedElement = null;
+            canvas.classList.remove('dragging');
+            drawElements(); // Recalculate dimensions after dropping the element
+            saveElements(); // Save after dropping
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            // If mouse leaves the canvas while dragging, drop the element
+            if (isDragging) {
+                isDragging = false;
+                draggedElement = null;
+                canvas.classList.remove('dragging');
+                drawElements();
+                saveElements(); // Save if dragging stops by leaving canvas
+            }
+        });
+
+        // Drag and drop logic for touch (Touch)
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent page scrolling
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+
+            // Check if clicked on rotation icon first
+            if (selectedElement && selectedElement.rotationIconRect) {
+                const iconRect = selectedElement.rotationIconRect;
+                if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
+                    touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
+                    // Clicked on rotation icon
+                    [selectedElement.width, selectedElement.height] = [selectedElement.height, selectedElement.width];
+                    // Update rotation angle by 90 degrees (PI/2 radians)
+                    selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
+                    drawElements();
+                    saveElements(); // Save after rotation
+                    isDragging = false; // Prevent dragging after rotation
+                    draggedElement = null;
+                    canvas.classList.remove('dragging');
+                    return; // Stop further processing
+                }
+            }
+
+            const touchXCm = touchX / pixelsPerCm;
+            const touchYCm = touchY / pixelsPerCm;
+
+            let clickedOnElement = false;
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const el = elements[i];
+                const elWidthCm = el.width;
+                const elHeightCm = el.height;
+
+                if (touchXCm >= el.x && touchXCm <= el.x + elWidthCm &&
+                    touchYCm >= el.y && touchYCm <= el.y + elHeightCm) {
+                    isDragging = true;
+                    draggedElement = el;
+                    selectedElement = el; // Set selected element
+                    clickedOnElement = true;
+
+                    offsetXCm = touchXCm - el.x;
+                    offsetYCm = touchYCm - el.y;
+                    canvas.classList.add('dragging');
+
+                    if (!el.isBoard) {
+                        elements.splice(i, 1);
+                        elements.push(draggedElement);
+                    } else {
+                        const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
+                            (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
+                             otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
+                        );
+                        if (hasPedalsAbove) {
+                            isDragging = false;
+                            draggedElement = null;
+                            canvas.classList.remove('dragging');
+                            showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
+                            return;
+                        }
+                        elements.splice(i, 1);
+                        const firstPedalIndex = elements.findIndex(item => !item.isBoard);
+                        if (firstPedalIndex !== -1) {
+                            elements.splice(firstPedalIndex, 0, draggedElement);
+                        } else {
+                            elements.push(draggedElement);
+                        }
+                    }
+                    drawElements();
+                    break;
+                }
+            }
+            if (!clickedOnElement) {
+                selectedElement = null; // Clear selection if clicked outside elements
+                drawElements(); // Redraw to remove selection highlight
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent page scrolling
+            if (!isDragging || !draggedElement) return;
+
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+
+            const touchXCm = touchX / pixelsPerCm;
+            const touchYCm = touchY / pixelsPerCm;
+
+            let newXCm = touchXCm - offsetXCm;
+            let newYCm = touchYCm - offsetYCm;
+
+            const elementWidthCm = draggedElement.width;
+            const elementHeightCm = draggedElement.height;
+
+            newXCm = Math.max(0, Math.min(newXCm, canvas.width / pixelsPerCm - elementWidthCm));
+            newYCm = Math.max(0, Math.min(newYCm, canvas.height / pixelsPerCm - elementHeightCm));
+
+            draggedElement.x = newXCm;
+            draggedElement.y = newYCm;
+
+            drawElements();
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+            draggedElement = null;
+            canvas.classList.remove('dragging');
+            drawElements();
+            saveElements(); // Save after dropping
+        });
+
+        // --- Custom Alert Modal ---
+        function showCustomAlert(message) {
+            const modalId = 'custom-alert-modal';
+            let modal = document.getElementById(modalId);
+
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4';
+                modal.innerHTML = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <p class="text-lg font-semibold text-white mb-4" id="custom-alert-message"></p>
+                        <button id="custom-alert-ok-btn" class="btn btn-primary w-full">OK</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            document.getElementById('custom-alert-message').textContent = message;
+            modal.classList.remove('hidden');
+
+            document.getElementById('custom-alert-ok-btn').onclick = () => {
+                modal.classList.add('hidden');
+            };
+        }
+
+        // Sidebar Toggle Logic
+        toggleSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+            // Adjust canvas position and size after sidebar toggle
+            resizeCanvas();
+        });
+
+        // Close sidebar button (inside sidebar)
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.add('-translate-x-full');
+            resizeCanvas();
+        });
+
+        // Initial check for sidebar visibility on load for desktop
+        // If on desktop, and sidebar is initially hidden, show it.
+        // This ensures the sidebar is visible by default on desktop.
+        if (window.innerWidth >= 1024) {
+            sidebar.classList.remove('-translate-x-full');
+            resizeCanvas();
+        }
+
+    </script>
+</body>
+</html>
