@@ -94,7 +94,6 @@
                     <label for="pedalColor" class="block text-sm font-medium text-gray-300 mb-1">Cor do Pedal:</label>
                     <input type="color" id="pedalColor" class="w-full h-10 rounded-md cursor-pointer" value="#3498db">
                 </div>
-                <!-- Removed pedal image input -->
                 <button id="addPedalBtn" class="btn btn-primary w-full mt-4">Adicionar Pedal</button>
             </div>
 
@@ -150,7 +149,6 @@
         const pedalWidthInput = document.getElementById('pedalWidth');
         const pedalHeightInput = document.getElementById('pedalHeight');
         const pedalColorInput = document.getElementById('pedalColor');
-        // Removed pedalImageInput
 
         const scaleInput = document.getElementById('scaleInput');
 
@@ -361,17 +359,17 @@
                 }
                 ctx.strokeRect(xPx, yPx, widthPx, heightPx);
 
-                // Draw rotation icon if element is selected (only for pedals, not boards)
-                if (selectedElement && selectedElement.id === el.id && !el.isBoard) {
-                    const iconSizePx = 24; // Size of the clickable icon square
-                    // Position the icon at the top-right corner of the element
-                    const iconX = xPx + widthPx - iconSizePx / 2;
-                    const iconY = yPx - iconSizePx / 2;
+                // Draw rotation and delete icons if element is selected
+                if (selectedElement && selectedElement.id === el.id) {
+                    const iconSizePx = 28; // Increased size by 4 pixels (from 24 to 28)
 
-                    // Store icon position for click detection
+                    // --- Rotation Icon (Top-Right) ---
+                    const rotationIconX = xPx + widthPx - iconSizePx / 2;
+                    const rotationIconY = yPx - iconSizePx / 2;
+
                     selectedElement.rotationIconRect = {
-                        x: iconX,
-                        y: iconY,
+                        x: rotationIconX,
+                        y: rotationIconY,
                         width: iconSizePx,
                         height: iconSizePx
                     };
@@ -379,7 +377,7 @@
                     // Draw a circle for the icon background
                     ctx.fillStyle = '#6366f1'; // Indigo color
                     ctx.beginPath();
-                    ctx.arc(iconX + iconSizePx / 2, iconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
+                    ctx.arc(rotationIconX + iconSizePx / 2, rotationIconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.strokeStyle = '#e2e8f0';
                     ctx.lineWidth = 1;
@@ -390,11 +388,42 @@
                     ctx.font = `${iconSizePx * 0.7}px sans-serif`; // Adjust font size for icon
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('↻', iconX + iconSizePx / 2, iconY + iconSizePx / 2 + 1); // Unicode refresh symbol
+                    ctx.fillText('↻', rotationIconX + iconSizePx / 2, rotationIconY + iconSizePx / 2 + 1); // Unicode refresh symbol
+
+
+                    // --- Delete Icon (Top-Left) ---
+                    const deleteIconX = xPx - iconSizePx / 2;
+                    const deleteIconY = yPx - iconSizePx / 2;
+
+                    selectedElement.deleteIconRect = {
+                        x: deleteIconX,
+                        y: deleteIconY,
+                        width: iconSizePx,
+                        height: iconSizePx
+                    };
+
+                    // Draw a circle for the icon background
+                    ctx.fillStyle = '#ef4444'; // Red color
+                    ctx.beginPath();
+                    ctx.arc(deleteIconX + iconSizePx / 2, deleteIconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Draw an 'X' for the delete icon
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.font = `${iconSizePx * 0.7}px sans-serif`; // Adjust font size for icon
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('X', deleteIconX + iconSizePx / 2, deleteIconY + iconSizePx / 2 + 1);
                 } else {
-                    // Clear rotationIconRect if not selected or if it's a board
+                    // Clear icon rects if not selected
                     if (el.rotationIconRect) {
                         delete el.rotationIconRect;
+                    }
+                    if (el.deleteIconRect) {
+                        delete el.deleteIconRect;
                     }
                 }
             });
@@ -456,7 +485,6 @@
             const width = parseFloat(pedalWidthInput.value);
             const height = parseFloat(pedalHeightInput.value);
             const color = pedalColorInput.value;
-            // Removed imageFile and pedalImageInput.files[0]
 
             if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
                 showCustomAlert('Por favor, preencha o nome, largura e altura do pedal corretamente.');
@@ -484,7 +512,6 @@
             pedalWidthInput.value = '7';
             pedalHeightInput.value = '12';
             pedalColorInput.value = '#3498db';
-            // Removed pedalImageInput.value = '';
         });
 
         // Function to clear all elements
@@ -501,12 +528,37 @@
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            // Check if clicked on rotation icon first
+            // Converte as coordenadas do mouse de pixels para cm usando a escala fixa
+            const mouseXCm = mouseX / pixelsPerCm;
+            const mouseYCm = mouseY / pixelsPerCm;
+
+            // Check if clicked on delete icon first
+            if (selectedElement && selectedElement.deleteIconRect) {
+                const iconRect = selectedElement.deleteIconRect;
+                if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
+                    mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
+                    // Clicked on delete icon
+                    const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
+                    if (indexToRemove !== -1) {
+                        elements.splice(indexToRemove, 1); // Remove the element
+                        selectedElement = null; // Clear selection
+                        drawElements();
+                        saveElements(); // Save after deletion
+                    }
+                    isDragging = false;
+                    draggedElement = null;
+                    canvas.classList.remove('dragging');
+                    return; // Stop further processing
+                }
+            }
+
+            // Check if clicked on rotation icon
             if (selectedElement && selectedElement.rotationIconRect) {
                 const iconRect = selectedElement.rotationIconRect;
                 if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
                     mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
                     // Clicked on rotation icon
+                    // Swap width and height for rotation
                     [selectedElement.width, selectedElement.height] = [selectedElement.height, selectedElement.width];
                     // Update rotation angle by 90 degrees (PI/2 radians)
                     selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
@@ -518,10 +570,6 @@
                     return; // Stop further processing
                 }
             }
-
-            // Convert mouse coordinates from pixels to cm using the fixed scale
-            const mouseXCm = mouseX / pixelsPerCm;
-            const mouseYCm = mouseY / pixelsPerCm;
 
             let clickedOnElement = false;
             // Iterate over elements from back to front to pick the top element
@@ -632,7 +680,31 @@
             const touchX = touch.clientX - rect.left;
             const touchY = touch.clientY - rect.top;
 
-            // Check if clicked on rotation icon first
+            // Converte as coordenadas do toque de pixels para cm usando a escala fixa
+            const touchXCm = touchX / pixelsPerCm;
+            const touchYCm = touchY / pixelsPerCm;
+
+            // Check if clicked on delete icon first
+            if (selectedElement && selectedElement.deleteIconRect) {
+                const iconRect = selectedElement.deleteIconRect;
+                if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
+                    touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
+                    // Clicked on delete icon
+                    const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
+                    if (indexToRemove !== -1) {
+                        elements.splice(indexToRemove, 1); // Remove the element
+                        selectedElement = null; // Clear selection
+                        drawElements();
+                        saveElements(); // Save after deletion
+                    }
+                    isDragging = false;
+                    draggedElement = null;
+                    canvas.classList.remove('dragging');
+                    return; // Stop further processing
+                }
+            }
+
+            // Check if clicked on rotation icon
             if (selectedElement && selectedElement.rotationIconRect) {
                 const iconRect = selectedElement.rotationIconRect;
                 if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
@@ -650,9 +722,6 @@
                 }
             }
 
-            const touchXCm = touchX / pixelsPerCm;
-            const touchYCm = touchY / pixelsPerCm;
-
             let clickedOnElement = false;
             for (let i = elements.length - 1; i >= 0; i--) {
                 const el = elements[i];
@@ -663,7 +732,7 @@
                     touchYCm >= el.y && touchYCm <= el.y + elHeightCm) {
                     isDragging = true;
                     draggedElement = el;
-                    selectedElement = el; // Set selected element
+                    selectedElement = el; // Define o elemento selecionado
                     clickedOnElement = true;
 
                     offsetXCm = touchXCm - el.x;
@@ -698,13 +767,13 @@
                 }
             }
             if (!clickedOnElement) {
-                selectedElement = null; // Clear selection if clicked outside elements
-                drawElements(); // Redraw to remove selection highlight
+                selectedElement = null; // Limpa a seleção se clicou fora dos elementos
+                drawElements(); // Redesenha para remover o destaque de seleção
             }
         });
 
         canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevent page scrolling
+            e.preventDefault(); // Previne a rolagem da página
             if (!isDragging || !draggedElement) return;
 
             const touch = e.touches[0];
@@ -735,7 +804,7 @@
             draggedElement = null;
             canvas.classList.remove('dragging');
             drawElements();
-            saveElements(); // Save after dropping
+            saveElements(); // Salva após soltar
         });
 
         // --- Custom Alert Modal ---
