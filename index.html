@@ -6,6 +6,8 @@
     <title>Simulador de Pedalboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for share icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -39,6 +41,29 @@
         }
         .btn-secondary {
             @apply bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500;
+        }
+        /* Style for the share URL modal */
+        .share-modal {
+            @apply fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden;
+        }
+        .share-modal-content {
+            @apply bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center;
+        }
+        .share-modal-content input {
+            @apply input-field w-full mb-4 text-center;
+        }
+        .share-modal-content button {
+            @apply btn btn-primary w-full;
+        }
+        /* Fixed Share Button */
+        #shareBoardBtn {
+            @apply fixed bottom-4 right-4 bg-purple-600 text-white p-4 rounded-full shadow-lg z-40 flex items-center justify-center; /* Added flex for icon centering */
+            @apply hover:bg-purple-700 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200;
+            width: 60px; /* Make it a fixed size circle */
+            height: 60px;
+        }
+        #shareBoardBtn i {
+            font-size: 1.5rem; /* Icon size */
         }
     </style>
 </head>
@@ -107,15 +132,7 @@
                 </div>
             </div>
 
-            <hr class="my-8 border-gray-700">
-
-            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Informações do Layout</h2>
-            <div class="bg-gray-700 p-4 rounded-md shadow-inner">
-                <p class="text-gray-300 mb-2">Largura Mínima Necessária: <span id="minRequiredWidthDisplay" class="font-bold text-white">0 cm</span></p>
-                <p class="text-gray-300">Altura Mínima Necessária: <span id="minRequiredHeightDisplay" class="font-bold text-white">0 cm</span></p>
-            </div>
-
-            <button id="clearBoardBtn" class="btn btn-danger w-full mt-6">Limpar Tudo</button>
+            <button id="clearBoardBtn" class="btn btn-danger w-full mt-4">Limpar Tudo</button>
         </aside>
 
         <!-- Área do Canvas (Pedalboard) -->
@@ -127,19 +144,91 @@
         <button id="toggleSidebarBtn" class="fixed top-4 left-4 bg-blue-600 text-white p-2 rounded-md shadow-lg z-30">
             Menu
         </button>
+
+        <!-- Fixed Share Button -->
+        <button id="shareBoardBtn" title="Compartilhar Pedalboard">
+            <i class="fas fa-share-alt"></i>
+        </button>
     </main>
 
     <footer class="bg-gray-800 p-4 text-center text-gray-400 text-sm shadow-inner mt-4">
         &copy; 2025 Simulador de Pedalboard. Todos os direitos reservados.
     </footer>
 
-    <script>
+    <!-- Share URL Modal -->
+    <div id="shareModal" class="share-modal">
+        <div class="share-modal-content">
+            <h3 class="text-xl font-semibold text-white mb-4">Compartilhe seu Pedalboard!</h3>
+            <input type="text" id="shareUrlInput" readonly class="input-field mb-4">
+            <button id="copyShareUrlBtn" class="btn btn-primary">Copiar URL</button>
+            <button id="closeShareModalBtn" class="btn btn-secondary mt-2">Fechar</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        let app;
+        let db;
+        let auth;
+        let userId = null; // Will store the authenticated user ID
+
+        // Initialize Firebase and authenticate
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Sign in anonymously or with custom token
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase initialized and user authenticated:", userId);
+                        // Now that Firebase is ready and user is authenticated,
+                        // check if there's a boardId in the URL to load a shared board.
+                        loadPedalboardFromUrl();
+                    } else {
+                        console.log("No user signed in.");
+                        userId = null;
+                        // If no user (e.g., anonymous sign-in failed), load from local storage as fallback
+                        loadElements();
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase or authenticating:", error);
+                showCustomAlert("Erro ao inicializar o Firebase. Algumas funcionalidades podem não estar disponíveis.");
+                // Fallback to local storage if Firebase fails
+                loadElements();
+            }
+        }
+
+        // Call Firebase initialization
+        initializeFirebase();
+
+
         const canvas = document.getElementById('pedalboardCanvas');
         const ctx = canvas.getContext('2d');
 
         const addBoardBtn = document.getElementById('addBoardBtn');
         const addPedalBtn = document.getElementById('addPedalBtn');
         const clearBoardBtn = document.getElementById('clearBoardBtn');
+        const shareBoardBtn = document.getElementById('shareBoardBtn'); // New share button
 
         const boardNameInput = document.getElementById('boardName');
         const boardWidthInput = document.getElementById('boardWidth');
@@ -152,13 +241,20 @@
 
         const scaleInput = document.getElementById('scaleInput');
 
-        const minRequiredWidthDisplay = document.getElementById('minRequiredWidthDisplay');
-        const minRequiredHeightDisplay = document.getElementById('minRequiredHeightDisplay');
+        // Removed minRequiredWidthDisplay and minRequiredHeightDisplay as they are not in the HTML
+        // const minRequiredWidthDisplay = document.getElementById('minRequiredWidthDisplay');
+        // const minRequiredHeightDisplay = document.getElementById('minRequiredHeightDisplay');
 
         const sidebar = document.getElementById('sidebar');
         const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const canvasSection = document.getElementById('canvas-section');
+
+        // Share Modal elements
+        const shareModal = document.getElementById('shareModal');
+        const shareUrlInput = document.getElementById('shareUrlInput');
+        const copyShareUrlBtn = document.getElementById('copyShareUrlBtn');
+        const closeShareModalBtn = document.getElementById('closeShareModalBtn');
 
         let elements = []; // Array para armazenar todos os elementos (pedalboards e pedais)
         let isDragging = false;
@@ -247,16 +343,8 @@
         // Add event listener for window resize
         window.addEventListener('resize', resizeCanvas);
         // Call resizeCanvas on initial page load
-        window.onload = () => {
-            pixelsPerCm = parseFloat(scaleInput.value); // Ensure correct initial value
-            loadElements(); // Load elements from localStorage
-            resizeCanvas();
-            // Initial check for sidebar visibility on load for desktop
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove('-translate-x-full');
-                resizeCanvas();
-            }
-        };
+        // This will now be handled after Firebase auth state is determined
+        // window.onload = () => { ... };
 
         // Event listener for scale input change
         scaleInput.addEventListener('input', () => {
@@ -267,11 +355,10 @@
             }
         });
 
-        // Function to save elements to localStorage
+        // Function to save elements to localStorage (fallback)
         function saveElements() {
             const simplifiedElements = elements.map(el => {
                 const savedEl = { ...el }; // Copy all properties
-                // Remove image-related properties as they are no longer used
                 delete savedEl.image;
                 delete savedEl.imageDataUrl;
                 delete savedEl.originalWidth;
@@ -281,7 +368,7 @@
             localStorage.setItem('pedalboardElements', JSON.stringify(simplifiedElements));
         }
 
-        // Function to load elements from localStorage
+        // Function to load elements from localStorage (fallback)
         function loadElements() {
             const storedElements = localStorage.getItem('pedalboardElements');
             if (storedElements) {
@@ -290,11 +377,9 @@
 
                 loadedData.forEach(data => {
                     const el = { ...data }; // Copy stored data
-                    // Ensure rotation angle is initialized for older saved data
                     if (typeof el.currentRotationAngle === 'undefined') {
                         el.currentRotationAngle = 0;
                     }
-                    // Remove image-related properties if they exist in old data
                     delete el.image;
                     delete el.imageDataUrl;
                     delete el.originalWidth;
@@ -306,6 +391,73 @@
             } else {
                 drawElements(); // Draw empty canvas if no stored elements
             }
+            resizeCanvas(); // Ensure canvas is sized correctly after loading
+        }
+
+        /**
+         * Saves the current pedalboard elements to Firestore for sharing.
+         * @returns {Promise<string>} A promise that resolves with the unique ID of the shared pedalboard.
+         */
+        async function savePedalboardForSharing() {
+            if (!db || !userId) {
+                showCustomAlert("Erro: Firebase não está pronto ou usuário não autenticado.");
+                return;
+            }
+
+            try {
+                // Remove properties that are not needed for storage or could cause issues
+                const elementsToSave = elements.map(el => {
+                    const { rotationIconRect, deleteIconRect, ...rest } = el;
+                    return rest;
+                });
+
+                // Store in a public collection for sharing
+                const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/shared_pedalboards`), {
+                    elements: JSON.stringify(elementsToSave), // Stringify to handle complex array of objects
+                    createdAt: new Date(),
+                    ownerId: userId // Store owner for potential future features
+                });
+                return docRef.id;
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showCustomAlert("Erro ao salvar o pedalboard para compartilhamento.");
+                return null;
+            }
+        }
+
+        /**
+         * Loads a pedalboard from Firestore using a boardId from the URL.
+         */
+        async function loadPedalboardFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const boardId = urlParams.get('boardId'); // Corrected from 'url.get' to 'urlParams.get'
+
+            if (boardId && db) {
+                try {
+                    const docRef = doc(db, `artifacts/${appId}/public/data/shared_pedalboards`, boardId);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        // Parse the stringified elements back into an array of objects
+                        elements = JSON.parse(data.elements || '[]');
+                        drawElements();
+                        showCustomAlert("Pedalboard compartilhado carregado com sucesso!");
+                    } else {
+                        console.log("No such shared pedalboard document!");
+                        showCustomAlert("Pedalboard compartilhado não encontrado. Carregando seu último layout salvo localmente.");
+                        loadElements(); // Fallback to local storage if shared board not found
+                    }
+                } catch (error) {
+                    console.error("Error getting shared document:", error);
+                    showCustomAlert("Erro ao carregar o pedalboard compartilhado. Carregando seu último layout salvo localmente.");
+                    loadElements(); // Fallback on error
+                }
+            } else {
+                // If no boardId in URL, load from local storage
+                loadElements();
+            }
+            resizeCanvas(); // Ensure canvas is sized correctly after loading
         }
 
 
@@ -428,22 +580,8 @@
                 }
             });
 
-            // Calculate minimum required size only for pedals
-            if (pedalsOnly.length > 0) {
-                minXCm = Math.min(...pedalsOnly.map(p => p.x));
-                minYCm = Math.min(...pedalsOnly.map(p => p.y));
-                maxXCm = Math.max(...pedalsOnly.map(p => p.x + p.width));
-                maxYCm = Math.max(...pedalsOnly.map(p => p.y + p.height));
-
-                const requiredWidth = (maxXCm - minXCm).toFixed(1);
-                const requiredHeight = (maxYCm - minYCm).toFixed(1);
-
-                minRequiredWidthDisplay.textContent = `${requiredWidth} cm`;
-                minRequiredHeightDisplay.textContent = `${requiredHeight} cm`;
-            } else {
-                minRequiredWidthDisplay.textContent = `0 cm`;
-                minRequiredHeightDisplay.textContent = `0 cm`;
-            }
+            // Removed calculation and display update for minRequiredWidthDisplay and minRequiredHeightDisplay
+            // as these elements are no longer in the HTML.
         }
 
         // Function to add a new pedalboard
@@ -472,6 +610,7 @@
             elements.push(newBoard);
             drawElements();
             saveElements(); // Save after adding
+            // Removed showCustomAlert('Pedalboard adicionado e salvo localmente!');
 
             // Clear input fields
             boardNameInput.value = '';
@@ -506,6 +645,7 @@
             elements.push(newPedal);
             drawElements();
             saveElements(); // Save after adding
+            // Removed showCustomAlert('Pedal adicionado e salvo localmente!');
 
             // Clear input fields
             pedalNameInput.value = '';
@@ -520,7 +660,31 @@
             selectedElement = null; // Clear selection
             drawElements();
             saveElements(); // Save after clearing
+            showCustomAlert('Todos os elementos foram limpos!');
         });
+
+        // Share button click handler
+        shareBoardBtn.addEventListener('click', async () => {
+            const boardId = await savePedalboardForSharing();
+            if (boardId) {
+                const shareUrl = `${window.location.origin}${window.location.pathname}?boardId=${boardId}`;
+                shareUrlInput.value = shareUrl;
+                shareModal.classList.remove('hidden');
+            }
+        });
+
+        // Copy URL button handler
+        copyShareUrlBtn.addEventListener('click', () => {
+            shareUrlInput.select();
+            document.execCommand('copy');
+            showCustomAlert('URL copiada para a área de transferência!');
+        });
+
+        // Close share modal button handler
+        closeShareModalBtn.addEventListener('click', () => {
+            shareModal.classList.add('hidden');
+        });
+
 
         // Drag and drop logic (Mouse)
         canvas.addEventListener('mousedown', (e) => {
@@ -544,6 +708,7 @@
                         selectedElement = null; // Clear selection
                         drawElements();
                         saveElements(); // Save after deletion
+                        showCustomAlert('Elemento excluído!');
                     }
                     isDragging = false;
                     draggedElement = null;
@@ -567,6 +732,7 @@
                     isDragging = false; // Prevent dragging after rotation
                     draggedElement = null;
                     canvas.classList.remove('dragging');
+                    showCustomAlert('Elemento girado!');
                     return; // Stop further processing
                 }
             }
@@ -696,6 +862,7 @@
                         selectedElement = null; // Clear selection
                         drawElements();
                         saveElements(); // Save after deletion
+                        showCustomAlert('Elemento excluído!');
                     }
                     isDragging = false;
                     draggedElement = null;
@@ -718,6 +885,7 @@
                     isDragging = false; // Prevent dragging after rotation
                     draggedElement = null;
                     canvas.classList.remove('dragging');
+                    showCustomAlert('Elemento girado!');
                     return; // Stop further processing
                 }
             }
