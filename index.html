@@ -17,7 +17,7 @@
             overflow: hidden; /* Prevent body scroll, canvas handles pan */
         }
         #pedalboardCanvas {
-            background-color: #2d3748; /* Darker gray for canvas background */
+            background-color: #2d3748; /* Default canvas background color, now fixed */
             border: 2px solid #4a5568;
             cursor: grab;
             touch-action: none; /* Prevent default touch actions like scrolling/zooming */
@@ -26,6 +26,96 @@
         }
         #pedalboardCanvas.dragging {
             cursor: grabbing;
+        }
+        /* Common input field styles */
+        .input-field {
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #4a5568; /* bg-gray-700 */
+            border: 1px solid #4a5568; /* border border-gray-600 */
+            outline: none; /* focus:outline-none */
+            color: white; /* text-white */
+        }
+        .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); /* focus:ring-2 focus:ring-blue-500 */
+            border-color: #4299e1; /* focus:ring-blue-500 */
+        }
+        /* Common button styles */
+        .btn {
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 600; /* font-semibold */
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 0 0 2px transparent, 0 0 0 4px transparent; /* focus:ring-2 focus:ring-offset-2 */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn:focus {
+            box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(100, 116, 139, 0.5); /* focus:ring-offset-2 and default ring color */
+        }
+        /* Primary button */
+        .btn-primary {
+            background-color: #3182ce; /* bg-blue-600 */
+            color: white; /* text-white */
+        }
+        .btn-primary:hover {
+            background-color: #2b6cb0; /* hover:bg-blue-700 */
+        }
+        .btn-primary:focus {
+            box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(66, 153, 225, 0.5); /* focus:ring-blue-500 */
+        }
+        /* Danger button */
+        .btn-danger {
+            background-color: #e53e3e; /* bg-red-600 */
+            color: white; /* text-white */
+        }
+        .btn-danger:hover {
+            background-color: #c53030; /* hover:bg-red-700 */
+        }
+        .btn-danger:focus {
+            box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(239, 68, 68, 0.5); /* focus:ring-red-500 */
+        }
+        /* Secondary button */
+        .btn-secondary {
+            background-color: #4a5568; /* bg-gray-600 */
+            color: white; /* text-white */
+        }
+        .btn-secondary:hover {
+            background-color: #2d3748; /* hover:bg-gray-700 */
+        }
+        .btn-secondary:focus {
+            box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(160, 174, 192, 0.5); /* focus:ring-gray-500 */
+        }
+        /* Style for the share URL modal */
+        .share-modal {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(26, 32, 44, 0.75); /* bg-gray-900 bg-opacity-75 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 1rem; /* p-4 */
+        }
+        .share-modal.hidden {
+            display: none;
+        }
+        .share-modal-content {
+            background-color: #2d3748; /* bg-gray-800 */
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+            max-width: 24rem; /* max-w-sm */
+            width: 100%; /* w-full */
+            text-align: center; /* text-center */
+        }
+        .share-modal-content input {
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        .share-modal-content button {
+            width: 100%; /* w-full */
         }
         /* Fixed Share Button */
         #shareBoardBtn {
@@ -55,6 +145,37 @@
         #shareBoardBtn i {
             font-size: 1.5rem; /* Icon size */
         }
+
+        /* Custom alert message area for scroll */
+        #custom-alert-message {
+            max-height: 15rem; /* Limit height */
+            overflow-y: auto; /* Add scroll if content overflows */
+            text-align: left; /* Align text left for readability */
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+        }
+        /* Custom select styling */
+        .custom-select {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            background-color: #4a5568;
+            border: 1px solid #4a5568;
+            color: white;
+            appearance: none; /* Remove default browser styling */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23e2e8f0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em;
+            cursor: pointer;
+        }
+        .custom-select:focus {
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+            border-color: #4299e1;
+            outline: none;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen relative">
@@ -64,26 +185,26 @@
 
     <main class="flex flex-1 relative">
         <!-- Painel de Controle (Sidebar) -->
-        <aside id="sidebar" class="fixed top-0 left-0 h-full w-full lg:w-1/4 bg-gray-800 p-6 shadow-lg z-50 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <aside id="sidebar" class="fixed top-0 left-0 h-full w-full lg:w-1/4 bg-gray-800 p-6 shadow-lg z-20 overflow-y-auto transform -translate-x-full transition-transform duration-300 ease-in-out">
             <button id="closeSidebarBtn" class="absolute top-4 right-4 text-gray-300 hover:text-white text-2xl">&times;</button>
 
             <h2 class="text-2xl font-semibold mb-6 text-blue-300">Adicionar Pedalboard</h2>
             <div class="space-y-4">
                 <div>
                     <label for="boardName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Board:</label>
-                    <input type="text" id="boardName" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" placeholder="Ex: Meu Board Principal">
+                    <input type="text" id="boardName" class="input-field w-full" placeholder="Ex: Meu Board Principal">
                 </div>
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label for="boardWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
-                        <input type="number" id="boardWidth" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="60" min="1">
+                        <input type="number" id="boardWidth" class="input-field w-full" value="60" min="1">
                     </div>
                     <div class="flex-1">
                         <label for="boardHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
-                        <input type="number" id="boardHeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="30" min="1">
+                        <input type="number" id="boardHeight" class="input-field w-full" value="30" min="1">
                     </div>
                 </div>
-                <button id="addBoardBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 w-full mt-4">Adicionar Pedalboard</button>
+                <button id="addBoardBtn" class="btn btn-secondary w-full mt-4">Adicionar Pedalboard</button>
             </div>
 
             <hr class="my-8 border-gray-700">
@@ -93,36 +214,81 @@
             <div class="space-y-4">
                 <div>
                     <label for="pedalName" class="block text-sm font-medium text-gray-300 mb-1">Nome do Pedal:</label>
-                    <input type="text" id="pedalName" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" placeholder="Ex: Overdrive">
+                    <input type="text" id="pedalName" class="input-field w-full" placeholder="Ex: Overdrive">
                 </div>
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label for="pedalWidth" class="block text-sm font-medium text-gray-300 mb-1">Largura (cm):</label>
-                        <input type="number" id="pedalWidth" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="7" min="1">
+                        <input type="number" id="pedalWidth" class="input-field w-full" value="7" min="1">
                     </div>
                     <div class="flex-1">
                         <label for="pedalHeight" class="block text-sm font-medium text-gray-300 mb-1">Altura (cm):</label>
-                        <input type="number" id="pedalHeight" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="12" min="1">
+                        <input type="number" id="pedalHeight" class="input-field w-full" value="12" min="1">
                     </div>
                 </div>
                 <div>
                     <label for="pedalColor" class="block text-sm font-medium text-gray-300 mb-1">Cor do Pedal:</label>
                     <input type="color" id="pedalColor" class="w-full h-10 rounded-md cursor-pointer" value="#3498db">
                 </div>
-                <button id="addPedalBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full mt-4">Adicionar Pedal</button>
+                <button id="addPedalBtn" class="btn btn-primary w-full mt-4">Adicionar Pedal</button>
             </div>
 
             <hr class="my-8 border-gray-700">
 
-            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Configurar Escala</h2>
+            <!-- Novo: Pedalboards Pré-definidos -->
+            <h2 class="text-2xl font-semibold mb-6 text-blue-300">Pedalboard Pré-definido</h2>
             <div class="space-y-4">
                 <div>
-                    <label for="scaleInput" class="block text-sm font-medium text-gray-300 mb-1">Pixels por cm:</label>
-                    <input type="number" id="scaleInput" class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full" value="15" min="1">
+                    <label for="predefinedBoardSelect" class="block text-sm font-medium text-gray-300 mb-1">Selecione:</label>
+                    <select id="predefinedBoardSelect" class="custom-select w-full">
+                        <option value="">-- Selecione um Pedalboard --</option>
+                    </select>
                 </div>
             </div>
 
-            <button id="clearBoardBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 w-full mt-4">Limpar Tudo</button>
+            <hr class="my-8 border-gray-700">
+
+            <!-- Novo: Pedais Pré-definidos -->
+            <h2 class="text-2xl font-semibold mb-6 text-blue-300">Pedal Pré-definido</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="predefinedPedalSelect" class="block text-sm font-medium text-gray-300 mb-1">Selecione:</label>
+                    <select id="predefinedPedalSelect" class="custom-select w-full">
+                        <option value="">-- Selecione um Pedal --</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-8 border-gray-700">
+
+            <!-- ATUALIZADO: Configurações da Tela -->
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Configurações da Tela</h2>
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label for="mainBoardWidthInput" class="block text-sm font-medium text-gray-300 mb-1">Largura:</label>
+                        <input type="number" id="mainBoardWidthInput" class="input-field w-full" value="80" min="1">
+                    </div>
+                    <div class="flex-1">
+                        <label for="mainBoardHeightInput" class="block text-sm font-medium text-gray-300 mb-1">Altura:</label>
+                        <input type="number" id="mainBoardHeightInput" class="input-field w-full" value="40" min="1">
+                    </div>
+                </div>
+                <button id="resetBoardViewBtn" class="btn btn-secondary w-full mt-4">Redefinir Visão da Tela</button>
+            </div>
+
+            <hr class="my-8 border-gray-700">
+
+            <!-- REMOVIDO: Seção "Configurar Escala" -->
+            <!-- <h2 class="text-2xl font-semibold mb-4 text-blue-300">Configurar Escala</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="scaleInput" class="block text-sm font-medium text-gray-300 mb-1">Pixels por cm:</label>
+                    <input type="number" id="scaleInput" class="input-field w-full" value="15" min="1">
+                </div>
+            </div> -->
+
+            <button id="clearBoardBtn" class="btn btn-danger w-full mt-4">Limpar Tudo</button>
         </aside>
 
         <!-- Área do Canvas (Pedalboard) -->
@@ -146,16 +312,17 @@
     </footer>
 
     <!-- Share URL Modal -->
-    <div id="shareModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 hidden">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+    <div id="shareModal" class="share-modal hidden"> <!-- Ensure it's hidden by default -->
+        <div class="share-modal-content">
             <h3 class="text-xl font-semibold text-white mb-4">Compartilhe seu Pedalboard!</h3>
-            <input type="text" id="shareUrlInput" readonly class="p-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white w-full mb-4 text-center">
-            <button id="copyShareUrlBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full">Copiar URL</button>
-            <button id="closeShareModalBtn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 w-full mt-2">Fechar</button>
+            <input type="text" id="shareUrlInput" readonly class="input-field mb-4">
+            <button id="copyShareUrlBtn" class="btn btn-primary">Copiar URL</button>
+            <button id="closeShareModalBtn" class="btn btn-secondary mt-2">Fechar</button>
         </div>
     </div>
 
     <script type="module">
+        console.log("Script execution started.");
         // Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -179,59 +346,71 @@
         const appId = firebaseConfig.projectId; // Use projectId as appId for Firestore path consistency
         let userId = null; // Will store the authenticated user ID
 
-        // Authenticate anonymously
-        signInAnonymously(auth)
-            .then((userCredential) => {
-                userId = userCredential.user.uid;
-                console.log("Firebase initialized and user authenticated:", userId);
-                loadPedalboardFromUrl(); // Now that Firebase is ready, try to load from URL
-            })
-            .catch((error) => {
-                console.error("Error signing in anonymously:", error);
-                showCustomAlert("Erro ao autenticar no Firebase. Algumas funcionalidades podem não estar disponíveis.");
-                loadElements(); // Fallback to local storage if Firebase fails
-            });
-
-        // The rest of your existing JavaScript code follows...
-
-        const canvas = document.getElementById('pedalboardCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const addBoardBtn = document.getElementById('addBoardBtn');
-        const addPedalBtn = document.getElementById('addPedalBtn');
-        const clearBoardBtn = document.getElementById('clearBoardBtn');
-        const shareBoardBtn = document.getElementById('shareBoardBtn'); // New share button
-
-        const boardNameInput = document.getElementById('boardName');
-        const boardWidthInput = document.getElementById('boardWidth');
-        const boardHeightInput = document.getElementById('boardHeight');
-
-        const pedalNameInput = document.getElementById('pedalName');
-        const pedalWidthInput = document.getElementById('pedalWidth');
-        const pedalHeightInput = document.getElementById('pedalHeight');
-        const pedalColorInput = document.getElementById('pedalColor');
-
-        const scaleInput = document.getElementById('scaleInput');
-
-        const sidebar = document.getElementById('sidebar');
-        const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-        const canvasSection = document.getElementById('canvas-section');
-
-        // Share Modal elements
-        const shareModal = document.getElementById('shareModal');
-        const shareUrlInput = document.getElementById('shareUrlInput');
-        const copyShareUrlBtn = document.getElementById('copyShareUrlBtn');
-        const closeShareModalBtn = document.getElementById('closeShareModalBtn');
-
+        // Global variables for canvas elements and state
         let elements = []; // Array para armazenar todos os elementos (pedalboards e pedais)
         let isDragging = false;
         let draggedElement = null;
-        let selectedElement = null;
+        let selectedElement = null; // Currently selected element
         let offsetXCm, offsetYCm; // Offset em cm
+        let pixelsPerCm; // Scale, will be updated by resizeCanvas
+        const moveIncrementCm = 0.5; // Incremento de movimento para atalhos de teclado em cm
 
-        // Escala: número de pixels que equivalem a 1 cm
-        let pixelsPerCm = parseFloat(scaleInput.value); // Initialize from input value
+        // Main board conceptual dimensions
+        let effectiveBoardWidthCm = 80; // Default width of the conceptual board area in cm
+        let effectiveBoardHeightCm = 40; // Default height of the conceptual board area in cm
+        
+        // Declare DOM element variables here, but assign them inside DOMContentLoaded
+        let canvas, ctx, addBoardBtn, addPedalBtn, clearBoardBtn, shareBoardBtn;
+        let boardNameInput, boardWidthInput, boardHeightInput;
+        let pedalNameInput, pedalWidthInput, pedalHeightInput, pedalColorInput;
+        let sidebar, toggleSidebarBtn, closeSidebarBtn, canvasSection; 
+        let shareModal, shareUrlInput, copyShareUrlBtn, closeShareModalBtn;
+        let predefinedBoardSelect, predefinedPedalSelect;
+        // New DOM elements for Phase 4
+        let mainBoardWidthInput, mainBoardHeightInput, resetBoardViewBtn;
+
+
+        // --- Mock Data for Predefined Pedals and Pedalboards ---
+        const mockPedalboardData = [
+            { name: "Standard 60x30", width: 60, height: 30, color: "#000000" },
+            { name: "Compact 45x20", width: 45, height: 20, color: "#000000" },
+            { name: "Large 80x40", width: 80, height: 40, color: "#000000" }
+        ];
+
+        const mockPedalData = [
+            { name: "Overdrive (Std)", width: 7, height: 12, color: "#DB2777" }, // Pink
+            { name: "Distortion (Std)", width: 7, height: 12, color: "#EF4444" }, // Red
+            { name: "Delay (Big)", width: 10, height: 15, color: "#3B82F6" },    // Blue
+            { name: "Reverb (Compact)", width: 6, height: 10, color: "#10B981" }, // Green
+            { name: "Wah (Large)", width: 11, height: 25, color: "#F59E0B" }     // Amber
+        ];
+
+
+        // --- Custom Alert Modal ---
+        function showCustomAlert(message) {
+            const modalId = 'custom-alert-modal';
+            let modal = document.getElementById(modalId);
+
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = modalId;
+                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-content-center z-50 p-4';
+                modal.innerHTML = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <p class="text-lg font-semibold text-white mb-4" id="custom-alert-message"></p>
+                        <button id="custom-alert-ok-btn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full">OK</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+
+            document.getElementById('custom-alert-message').textContent = message;
+            modal.classList.remove('hidden');
+
+            document.getElementById('custom-alert-ok-btn').onclick = () => {
+                modal.classList.add('hidden');
+            };
+        }
 
         /**
          * Converts a hexadecimal color string to its RGB components.
@@ -275,53 +454,46 @@
             return luminance > 0.179 ? '#000000' : '#FFFFFF';
         }
 
-
-        // Função para ajustar o tamanho do canvas
+        // Função para ajustar o tamanho do canvas e a escala, e desenhar elementos
         function resizeCanvas() {
+            console.log("resizeCanvas() called.");
+            if (!sidebar || !canvasSection || !canvas || !ctx) {
+                console.warn("resizeCanvas: DOM elements not yet initialized.");
+                return;
+            }
+
             const headerHeight = document.querySelector('header').offsetHeight;
             const footerHeight = document.querySelector('footer').offsetHeight;
 
-            // Available height for main content area
             const availableHeight = window.innerHeight - headerHeight - footerHeight;
-
-            // Available width for main content area (considering sidebar)
             let availableWidth = window.innerWidth;
-            const sidebarWidth = sidebar.offsetWidth; // Get actual sidebar width
+            const sidebarWidth = sidebar.offsetWidth;
 
-            // Adjust canvas position and width based on sidebar visibility
-            if (!sidebar.classList.contains('-translate-x-full')) { // If sidebar is visible
-                // For desktop, canvas shifts to the right
+            if (!sidebar.classList.contains('-translate-x-full')) {
                 if (window.innerWidth >= 1024) {
                     availableWidth -= sidebarWidth;
                     canvasSection.style.left = `${sidebarWidth}px`;
-                } else { // For mobile, sidebar overlays, canvas stays full width
+                } else {
                     canvasSection.style.left = '0';
                 }
-            } else { // If sidebar is hidden
+            } else {
                 canvasSection.style.left = '0';
             }
 
-            // Set canvas dimensions to fill the available space
             canvas.width = availableWidth;
             canvas.height = availableHeight;
 
-            drawElements(); // Redraw elements with the new scale
+            // Adjust pixelsPerCm based on effective board dimensions to fit the canvas
+            pixelsPerCm = Math.min(
+                canvas.width / effectiveBoardWidthCm,
+                canvas.height / effectiveBoardHeightCm
+            );
+            // Ensure a minimum scale if board dimensions are very small
+            if (pixelsPerCm < 1) pixelsPerCm = 1;
+            console.log(`resizeCanvas: new pixelsPerCm = ${pixelsPerCm.toFixed(2)}`);
+
+            drawElements(); // Redraw elements with the new scale and background
         }
-
-        // Add event listener for window resize
-        window.addEventListener('resize', resizeCanvas);
-        // Call resizeCanvas on initial page load
-        // This will now be handled after Firebase auth state is determined
-        // window.onload = () => { ... };
-
-        // Event listener for scale input change
-        scaleInput.addEventListener('input', () => {
-            const newScale = parseFloat(scaleInput.value);
-            if (!isNaN(newScale) && newScale > 0) {
-                pixelsPerCm = newScale;
-                drawElements(); // Redraw elements with the new scale
-            }
-        });
 
         // Function to save elements to localStorage (fallback)
         function saveElements() {
@@ -331,13 +503,22 @@
                 delete savedEl.imageDataUrl;
                 delete savedEl.originalWidth;
                 delete savedEl.originalHeight;
+                // Remove rotationIconRect and deleteIconRect from saved data
+                delete savedEl.rotationIconRect;
+                delete savedEl.deleteIconRect;
                 return savedEl;
             });
             localStorage.setItem('pedalboardElements', JSON.stringify(simplifiedElements));
+            // Also save main board settings
+            const settings = {
+                effectiveBoardWidthCm,
+                effectiveBoardHeightCm
+            };
+            localStorage.setItem('pedalboardSettings', JSON.stringify(settings));
         }
 
-        // Function to load elements from localStorage (fallback)
-        function loadElements() {
+        // Function to load elements and settings from localStorage (fallback)
+        function loadElementsAndSettings() {
             const storedElements = localStorage.getItem('pedalboardElements');
             if (storedElements) {
                 const loadedData = JSON.parse(storedElements);
@@ -355,52 +536,74 @@
 
                     elements.push(el);
                 });
-                drawElements(); // Redraw after loading elements
-            } else {
-                drawElements(); // Draw empty canvas if no stored elements
             }
-            resizeCanvas(); // Ensure canvas is sized correctly after loading
+
+            const storedSettings = localStorage.getItem('pedalboardSettings');
+            if (storedSettings) {
+                const settings = JSON.parse(storedSettings);
+                effectiveBoardWidthCm = settings.effectiveBoardWidthCm || 80;
+                effectiveBoardHeightCm = settings.effectiveBoardHeightCm || 40;
+
+                // Update UI inputs with loaded settings
+                if (mainBoardWidthInput) mainBoardWidthInput.value = effectiveBoardWidthCm;
+                if (mainBoardHeightInput) mainBoardHeightInput.value = effectiveBoardHeightCm;
+            }
+
+            drawElements(); // Redraw after loading
         }
+
 
         /**
          * Saves the current pedalboard elements to Firestore for sharing.
          * @returns {Promise<string>} A promise that resolves with the unique ID of the shared pedalboard.
          */
         async function savePedalboardForSharing() {
+            console.log("savePedalboardForSharing: Function called.");
+            console.log("savePedalboardForSharing: State check - db:", db, "userId:", userId); // New debug log
+
             if (!db || !userId) {
-                showCustomAlert("Erro: Firebase não está pronto ou usuário não autenticado.");
-                return;
+                console.log("savePedalboardForSharing: Firebase or userId is not ready. Aborting save."); // More specific log
+                showCustomAlert("Erro: Firebase não está pronto ou usuário não autenticado. Tente recarregar a página.");
+                return null;
             }
 
             try {
-                // Remove properties that are not needed for storage or could cause issues
+                console.log("savePedalboardForSharing: Preparing elements for save.");
                 const elementsToSave = elements.map(el => {
                     const { rotationIconRect, deleteIconRect, ...rest } = el;
                     return rest;
                 });
+                console.log("savePedalboardForSharing: Elements prepared. Attempting addDoc.");
 
-                // Store in a public collection for sharing
                 const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/shared_pedalboards`), {
                     elements: JSON.stringify(elementsToSave), // Stringify to handle complex array of objects
+                    effectiveBoardWidthCm: effectiveBoardWidthCm,
+                    effectiveBoardHeightCm: effectiveBoardHeightCm,
                     createdAt: new Date(),
                     ownerId: userId // Store owner for potential future features
                 });
+                console.log("savePedalboardForSharing: docRef object after addDoc:", docRef); // NEW LOG
+                console.log("savePedalboardForSharing: Pedalboard saved to Firestore with ID:", docRef.id);
                 return docRef.id;
             } catch (e) {
-                console.error("Error adding document: ", e);
-                showCustomAlert("Erro ao salvar o pedalboard para compartilhamento.");
+                console.error("savePedalboardForSharing: Caught error adding document to Firestore: ", e); // More explicit log
+                showCustomAlert("Erro ao salvar o pedalboard para compartilhamento. Verifique as regras de segurança do Firestore e sua conexão."); // More helpful alert
                 return null;
+            } finally { // NEW FINALLY BLOCK
+                console.log("savePedalboardForSharing: Function finished execution.");
             }
         }
 
         /**
          * Loads a pedalboard from Firestore using a boardId from the URL.
+         * This function is called after Firebase authentication is complete.
          */
         async function loadPedalboardFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            const boardId = urlParams.get('boardId'); // Corrected from 'url.get' to 'urlParams.get'
+            const boardId = urlParams.get('boardId');
 
             if (boardId && db) {
+                console.log("loadPedalboardFromUrl: Attempting to load shared pedalboard with ID:", boardId);
                 try {
                     const docRef = doc(db, `artifacts/${appId}/public/data/shared_pedalboards`, boardId);
                     const docSnap = await getDoc(docRef);
@@ -409,67 +612,119 @@
                         const data = docSnap.data();
                         // Parse the stringified elements back into an array of objects
                         elements = JSON.parse(data.elements || '[]');
+                        // Load main board settings from shared data
+                        effectiveBoardWidthCm = data.effectiveBoardWidthCm || 80;
+                        effectiveBoardHeightCm = data.effectiveBoardHeightCm || 40;
+
+                        // Update UI inputs with loaded settings
+                        if (mainBoardWidthInput) mainBoardWidthInput.value = effectiveBoardWidthCm;
+                        if (mainBoardHeightInput) mainBoardHeightInput.value = effectiveBoardHeightCm;
+
                         drawElements();
                         showCustomAlert("Pedalboard compartilhado carregado com sucesso!");
+                        console.log("loadPedalboardFromUrl: Shared pedalboard loaded successfully.");
                     } else {
-                        console.log("No such shared pedalboard document!");
+                        console.log("loadPedalboardFromUrl: No such shared pedalboard document found for ID:", boardId);
                         showCustomAlert("Pedalboard compartilhado não encontrado. Carregando seu último layout salvo localmente.");
-                        loadElements(); // Fallback to local storage if shared board not found
+                        loadElementsAndSettings(); // Fallback to local storage if shared board not found
                     }
                 } catch (error) {
-                    console.error("Error getting shared document:", error);
+                    console.error("loadPedalboardFromUrl: Error getting shared document from Firestore:", error);
                     showCustomAlert("Erro ao carregar o pedalboard compartilhado. Carregando seu último layout salvo localmente.");
-                    loadElements(); // Fallback on error
+                    loadElementsAndSettings(); // Fallback on error
                 }
             } else {
+                console.log("loadPedalboardFromUrl: No boardId in URL or Firebase not ready. Loading local elements.");
                 // If no boardId in URL, load from local storage
-                loadElements();
+                loadElementsAndSettings();
             }
-            resizeCanvas(); // Ensure canvas is sized correctly after loading
+            // resizeCanvas() is now called by DOMContentLoaded or window resize listener
+        }
+
+        /**
+         * Rotates a point (px, py) around a center (cx, cy) by a given angle.
+         * @param {number} px - X coordinate of the point.
+         * @param {number} py - Y coordinate of the point.
+         * @param {number} cx - X coordinate of the rotation center.
+         * @param {number} cy - Y coordinate of the rotation center.
+         * @param {number} angle - Rotation angle in radians.
+         * @returns {{x: number, y: number}} The new coordinates of the rotated point.
+         */
+        function rotatePoint(px, py, cx, cy, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const nx = cx + (px - cx) * cos - (py - cy) * sin;
+            const ny = cy + (px - cx) * sin + (py - cy) * cos;
+            return { x: nx, y: ny };
         }
 
 
         // Function to draw all elements on the canvas
         function drawElements() {
+            if (!ctx || !canvas) {
+                console.warn("drawElements: Canvas context or canvas element not initialized.");
+                return;
+            }
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
 
-            // Draw a background for the entire canvas area
-            ctx.fillStyle = '#2d3748'; // Canvas background
+            // Draw a background for the entire canvas area using the fixed background color
+            ctx.fillStyle = getComputedStyle(canvas).backgroundColor; // Get color from CSS
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            let minXCm = Infinity, minYCm = Infinity;
-            let maxXCm = 0, maxYCm = 0;
+            // Calculate the position to center the conceptual effectiveBoardWidthCm x effectiveBoardHeightCm area
+            // within the actual canvas, considering current pixelsPerCm.
+            const displayBoardWidthPx = effectiveBoardWidthCm * pixelsPerCm;
+            const displayBoardHeightPx = effectiveBoardHeightCm * pixelsPerCm;
 
-            // Filter only pedals to calculate minimum required size
-            const pedalsOnly = elements.filter(el => !el.isBoard);
+            const boardOffsetX = (canvas.width - displayBoardWidthPx) / 2;
+            const boardOffsetY = (canvas.height - displayBoardHeightPx) / 2;
+
+            // Draw a border for the conceptual board area
+            ctx.strokeStyle = '#6B7280'; // Gray border for the conceptual board area
+            ctx.lineWidth = 2;
+            ctx.strokeRect(boardOffsetX, boardOffsetY, displayBoardWidthPx, displayBoardHeightPx);
+
 
             // Draw elements: boards first (background), then pedals (foreground)
             elements.sort((a, b) => (a.isBoard === b.isBoard) ? 0 : a.isBoard ? -1 : 1).forEach(el => {
-                const widthPx = el.width * pixelsPerCm;
-                const heightPx = el.height * pixelsPerCm;
-                const xPx = el.x * pixelsPerCm;
-                const yPx = el.y * pixelsPerCm;
+                // Save the current canvas state before applying transformations
+                ctx.save();
+
+                const originalWidthPx = el.width * pixelsPerCm;
+                const originalHeightPx = el.height * pixelsPerCm;
+                // Position elements relative to the conceptual board's origin
+                const xPx = el.x * pixelsPerCm + boardOffsetX;
+                const yPx = el.y * pixelsPerCm + boardOffsetY;
+
+                // Calculate center of the element for rotation
+                const centerX = xPx + originalWidthPx / 2;
+                const centerY = yPx + originalHeightPx / 2;
+
+                // Translate to center, rotate, then translate back
+                ctx.translate(centerX, centerY);
+                ctx.rotate(el.currentRotationAngle);
+                ctx.translate(-centerX, -centerY);
 
                 // Draw element color
                 ctx.fillStyle = el.color;
-                ctx.fillRect(xPx, yPx, widthPx, heightPx);
+                ctx.fillRect(xPx, yPx, originalWidthPx, originalHeightPx);
 
                 // Determine text color based on background color
                 const textColor = getContrastColor(el.color);
                 ctx.fillStyle = textColor;
 
                 // Draw element name
-                ctx.font = `${(el.isBoard ? 16 : 12)}px Inter`; // Fixed font size based on pixelsPerCm
+                ctx.font = `${(el.isBoard ? 16 : 12)}px Inter`;
                 ctx.textAlign = 'center';
-                ctx.fillText(el.name, xPx + widthPx / 2, yPx + heightPx / 2 + (el.isBoard ? 8 : 5));
+                ctx.textBaseline = 'middle'; // Align text vertically in the middle
+                ctx.fillText(el.name, xPx + originalWidthPx / 2, yPx + originalHeightPx / 2 - (el.isBoard ? 8 : 5)); // Adjusted Y for dimensions below
 
                 // Draw dimensions below the name
-                ctx.font = `${(el.isBoard ? 10 : 9)}px Inter`; // Smaller font for dimensions
-                ctx.fillText(`${el.width.toFixed(1)}x${el.height.toFixed(1)} cm`, xPx + widthPx / 2, yPx + heightPx / 2 + (el.isBoard ? 20 : 15));
+                ctx.font = `${(el.isBoard ? 10 : 9)}px Inter`;
+                ctx.fillText(`${el.width.toFixed(1)}x${el.height.toFixed(1)} cm`, xPx + originalWidthPx / 2, yPx + originalHeightPx / 2 + (el.isBoard ? 8 : 5));
 
 
                 // Draw element border
-                // Add selection highlight
                 if (selectedElement && selectedElement.id === el.id) {
                     ctx.strokeStyle = '#a78bfa'; // Purple for selected
                     ctx.lineWidth = el.isBoard ? 5 : 4; // Thicker border for selected
@@ -477,15 +732,46 @@
                     ctx.strokeStyle = el.isBoard ? '#718096' : '#cbd5e0'; // Different border color for board
                     ctx.lineWidth = el.isBoard ? 3 : 2; // Different border thickness for board
                 }
-                ctx.strokeRect(xPx, yPx, widthPx, heightPx);
+                ctx.strokeRect(xPx, yPx, originalWidthPx, originalHeightPx);
 
-                // Draw rotation and delete icons if element is selected
+                // Restore the canvas state to remove transformations for the next element
+                ctx.restore();
+
+                // Draw rotation and delete icons if element is selected (outside of ctx.save/restore block)
+                // These icons should not rotate with the element, but stay relative to the canvas.
                 if (selectedElement && selectedElement.id === el.id) {
-                    const iconSizePx = 28; // Increased size by 4 pixels (from 24 to 28)
+                    const iconSizePx = 28;
 
-                    // --- Rotation Icon (Top-Right) ---
-                    const rotationIconX = xPx + widthPx - iconSizePx / 2;
-                    const rotationIconY = yPx - iconSizePx / 2;
+                    // Calculate the four corners of the UNROTATED rectangle in canvas pixels, adjusted for boardOffsetX/Y
+                    const p1 = { x: el.x * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p2 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p3 = { x: el.x * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
+                    const p4 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
+
+                    // Center of rotation for the element in canvas pixels, adjusted for boardOffsetX/Y
+                    const rotCenterX = p1.x + (el.width * pixelsPerCm) / 2;
+                    const rotCenterY = p1.y + (el.height * pixelsPerCm) / 2;
+                    const angle = el.currentRotationAngle;
+
+                    // Rotate the four corners to find the bounding box of the rotated element
+                    const rotatedP1 = rotatePoint(p1.x, p1.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP2 = rotatePoint(p2.x, p2.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP3 = rotatePoint(p3.x, p3.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP4 = rotatePoint(p4.x, p4.y, rotCenterX, rotCenterY, angle);
+
+                    // Find the min/max X and Y to get the bounding box of the rotated element
+                    const allX = [rotatedP1.x, rotatedP2.x, rotatedP3.x, rotatedP4.x];
+                    const allY = [rotatedP1.y, rotatedP2.y, rotatedP3.y, rotatedP4.y];
+
+                    const minBoundX = Math.min(...allX);
+                    const maxBoundX = Math.max(...allX);
+                    const minBoundY = Math.min(...allY);
+                    const maxBoundY = Math.max(...allY);
+
+                    // Now, position the icons relative to this calculated bounding box
+                    // --- Rotation Icon (Top-Right of Bounding Box) ---
+                    const rotationIconX = maxBoundX - iconSizePx / 2;
+                    const rotationIconY = minBoundY - iconSizePx / 2;
 
                     selectedElement.rotationIconRect = {
                         x: rotationIconX,
@@ -494,7 +780,6 @@
                         height: iconSizePx
                     };
 
-                    // Draw a circle for the icon background
                     ctx.fillStyle = '#6366f1'; // Indigo color
                     ctx.beginPath();
                     ctx.arc(rotationIconX + iconSizePx / 2, rotationIconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
@@ -503,17 +788,15 @@
                     ctx.lineWidth = 1;
                     ctx.stroke();
 
-                    // Draw a simple arrow or refresh icon
                     ctx.fillStyle = '#e2e8f0';
-                    ctx.font = `${iconSizePx * 0.7}px sans-serif`; // Adjust font size for icon
+                    ctx.font = `${iconSizePx * 0.7}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('↻', rotationIconX + iconSizePx / 2, rotationIconY + iconSizePx / 2 + 1); // Unicode refresh symbol
+                    ctx.fillText('↻', rotationIconX + iconSizePx / 2, rotationIconY + iconSizePx / 2 + 1);
 
-
-                    // --- Delete Icon (Top-Left) ---
-                    const deleteIconX = xPx - iconSizePx / 2;
-                    const deleteIconY = yPx - iconSizePx / 2;
+                    // --- Delete Icon (Top-Left of Bounding Box) ---
+                    const deleteIconX = minBoundX - iconSizePx / 2;
+                    const deleteIconY = minBoundY - iconSizePx / 2;
 
                     selectedElement.deleteIconRect = {
                         x: deleteIconX,
@@ -522,7 +805,6 @@
                         height: iconSizePx
                     };
 
-                    // Draw a circle for the icon background
                     ctx.fillStyle = '#ef4444'; // Red color
                     ctx.beginPath();
                     ctx.arc(deleteIconX + iconSizePx / 2, deleteIconY + iconSizePx / 2, iconSizePx / 2, 0, Math.PI * 2);
@@ -531,14 +813,12 @@
                     ctx.lineWidth = 1;
                     ctx.stroke();
 
-                    // Draw an 'X' for the delete icon
                     ctx.fillStyle = '#e2e8f0';
-                    ctx.font = `${iconSizePx * 0.7}px sans-serif`; // Adjust font size for icon
+                    ctx.font = `${iconSizePx * 0.7}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText('X', deleteIconX + iconSizePx / 2, deleteIconY + iconSizePx / 2 + 1);
                 } else {
-                    // Clear icon rects if not selected
                     if (el.rotationIconRect) {
                         delete el.rotationIconRect;
                     }
@@ -547,448 +827,733 @@
                     }
                 }
             });
-
-            // Removed calculation and display update for minRequiredWidthDisplay and minRequiredHeightDisplay
-            // as these elements are no longer in the HTML.
         }
 
-        // Function to add a new pedalboard
-        addBoardBtn.addEventListener('click', () => {
-            const name = boardNameInput.value.trim();
-            const width = parseFloat(boardWidthInput.value);
-            const height = parseFloat(boardHeightInput.value);
-
-            if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-                showCustomAlert('Por favor, preencha o nome, largura e altura do pedalboard corretamente.');
-                return;
-            }
-
-            const newBoard = {
-                id: Date.now(),
-                name: name,
-                width: width,
-                height: height,
-                x: 10, // Initial position in cm
-                y: 10, // Initial position in cm
-                color: '#000000', // Fixed to black
-                isBoard: true, // Property to identify as a board
-                currentRotationAngle: 0 // Initialize rotation angle
-            };
-
-            elements.push(newBoard);
-            drawElements();
-            saveElements(); // Save after adding
-            // Removed showCustomAlert('Pedalboard adicionado e salvo localmente!');
-
-            // Clear input fields
-            boardNameInput.value = '';
-            boardWidthInput.value = '60';
-            boardHeightInput.value = '30';
-        });
-
-        // Function to add a new pedal
-        addPedalBtn.addEventListener('click', () => {
-            const name = pedalNameInput.value.trim();
-            const width = parseFloat(pedalWidthInput.value);
-            const height = parseFloat(pedalHeightInput.value);
-            const color = pedalColorInput.value;
-
-            if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
-                showCustomAlert('Por favor, preencha o nome, largura e altura do pedal corretamente.');
-                return;
-            }
-
-            const newPedal = {
-                id: Date.now(),
-                name: name,
-                width: width,
-                height: height,
-                x: 2, // Initial position in cm
-                y: 2, // Initial position in cm
-                color: color,
-                isBoard: false, // Property to identify as a pedal
-                currentRotationAngle: 0 // Initialize rotation angle
-            };
-
-            elements.push(newPedal);
-            drawElements();
-            saveElements(); // Save after adding
-            // Removed showCustomAlert('Pedal adicionado e salvo localmente!');
-
-            // Clear input fields
-            pedalNameInput.value = '';
-            pedalWidthInput.value = '7';
-            pedalHeightInput.value = '12';
-            pedalColorInput.value = '#3498db';
-        });
-
-        // Function to clear all elements
-        clearBoardBtn.addEventListener('click', () => {
-            elements = [];
-            selectedElement = null; // Clear selection
-            drawElements();
-            saveElements(); // Save after clearing
-            showCustomAlert('Todos os elementos foram limpos!');
-        });
-
-        // Share button click handler
-        shareBoardBtn.addEventListener('click', async () => {
-            const boardId = await savePedalboardForSharing();
-            if (boardId) {
-                const shareUrl = `${window.location.origin}${window.location.pathname}?boardId=${boardId}`;
-                shareUrlInput.value = shareUrl;
-                shareModal.classList.remove('hidden');
-            }
-        });
-
-        // Copy URL button handler
-        copyShareUrlBtn.addEventListener('click', () => {
-            shareUrlInput.select();
-            document.execCommand('copy');
-            showCustomAlert('URL copiada para a área de transferência!');
-        });
-
-        // Close share modal button handler
-        closeShareModalBtn.addEventListener('click', () => {
-            shareModal.classList.add('hidden');
-        });
-
-
         // Drag and drop logic (Mouse)
-        canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+        function setupCanvasMouseEvents() {
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
 
-            // Converte as coordenadas do mouse de pixels para cm usando a escala fixa
-            const mouseXCm = mouseX / pixelsPerCm;
-            const mouseYCm = mouseY / pixelsPerCm;
+                // Calculate the conceptual board's offset within the canvas
+                const displayBoardWidthPx = effectiveBoardWidthCm * pixelsPerCm;
+                const displayBoardHeightPx = effectiveBoardHeightCm * pixelsPerCm;
+                const boardOffsetX = (canvas.width - displayBoardWidthPx) / 2;
+                const boardOffsetY = (canvas.height - displayBoardHeightPx) / 2;
 
-            // Check if clicked on delete icon first
-            if (selectedElement && selectedElement.deleteIconRect) {
-                const iconRect = selectedElement.deleteIconRect;
-                if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
-                    mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
-                    // Clicked on delete icon
-                    const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
-                    if (indexToRemove !== -1) {
-                        elements.splice(indexToRemove, 1); // Remove the element
-                        selectedElement = null; // Clear selection
+                // Adjust mouse coordinates to be relative to the conceptual board's origin
+                const mouseXAdjusted = mouseX - boardOffsetX;
+                const mouseYAdjusted = mouseY - boardOffsetY;
+
+                const mouseXCm = mouseXAdjusted / pixelsPerCm;
+                const mouseYCm = mouseYAdjusted / pixelsPerCm;
+
+                // Check if clicked on delete icon first
+                if (selectedElement && selectedElement.deleteIconRect) {
+                    const iconRect = selectedElement.deleteIconRect;
+                    if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
+                        mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
+                        const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
+                        if (indexToRemove !== -1) {
+                            elements.splice(indexToRemove, 1);
+                            selectedElement = null;
+                            drawElements();
+                            saveElements();
+                        }
+                        isDragging = false;
+                        draggedElement = null;
+                        canvas.classList.remove('dragging');
+                        return;
+                    }
+                }
+
+                // Check if clicked on rotation icon
+                if (selectedElement && selectedElement.rotationIconRect) {
+                    const iconRect = selectedElement.rotationIconRect;
+                    if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
+                        mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
+                        // Update rotation angle by 90 degrees (PI/2 radians)
+                        selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
                         drawElements();
-                        saveElements(); // Save after deletion
-                        showCustomAlert('Elemento excluído!');
+                        saveElements();
+                        isDragging = false;
+                        draggedElement = null;
+                        canvas.classList.remove('dragging');
+                        return;
                     }
-                    isDragging = false;
-                    draggedElement = null;
-                    canvas.classList.remove('dragging');
-                    return; // Stop further processing
                 }
-            }
 
-            // Check if clicked on rotation icon
-            if (selectedElement && selectedElement.rotationIconRect) {
-                const iconRect = selectedElement.rotationIconRect;
-                if (mouseX >= iconRect.x && mouseX <= iconRect.x + iconRect.width &&
-                    mouseY >= iconRect.y && mouseY <= iconRect.y + iconRect.height) {
-                    // Clicked on rotation icon
-                    // Swap width and height for rotation
-                    [selectedElement.width, selectedElement.height] = [selectedElement.height, selectedElement.width];
-                    // Update rotation angle by 90 degrees (PI/2 radians)
-                    selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
-                    drawElements();
-                    saveElements(); // Save after rotation
-                    isDragging = false; // Prevent dragging after rotation
-                    draggedElement = null;
-                    canvas.classList.remove('dragging');
-                    showCustomAlert('Elemento girado!');
-                    return; // Stop further processing
-                }
-            }
+                let clickedOnElement = false;
+                // Iterate over elements from back to front to pick the top element
+                for (let i = elements.length - 1; i >= 0; i--) {
+                    const el = elements[i];
+                    
+                    // Calculate the four corners of the UNROTATED rectangle in canvas pixels, adjusted for boardOffsetX/Y
+                    const p1 = { x: el.x * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p2 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p3 = { x: el.x * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
+                    const p4 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
 
-            let clickedOnElement = false;
-            // Iterate over elements from back to front to pick the top element
-            for (let i = elements.length - 1; i >= 0; i--) {
-                const el = elements[i];
-                const elWidthCm = el.width;
-                const elHeightCm = el.height;
+                    // Center of rotation for the element in canvas pixels, adjusted for boardOffsetX/Y
+                    const rotCenterX = p1.x + (el.width * pixelsPerCm) / 2;
+                    const rotCenterY = p1.y + (el.height * pixelsPerCm) / 2;
+                    const angle = el.currentRotationAngle;
 
-                if (mouseXCm >= el.x && mouseXCm <= el.x + elWidthCm &&
-                    mouseYCm >= el.y && mouseYCm <= el.y + elHeightCm) {
-                    isDragging = true;
-                    draggedElement = el;
-                    selectedElement = el; // Set selected element
-                    clickedOnElement = true;
+                    // Rotate the four corners
+                    const rotatedP1 = rotatePoint(p1.x, p1.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP2 = rotatePoint(p2.x, p2.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP3 = rotatePoint(p3.x, p3.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP4 = rotatePoint(p4.x, p4.y, rotCenterX, rotCenterY, angle);
 
-                    // Calculate offset in cm
-                    offsetXCm = mouseXCm - el.x;
-                    offsetYCm = mouseYCm - el.y;
-                    canvas.classList.add('dragging');
+                    // Find the min/max X and Y to get the bounding box of the rotated element
+                    const allX = [rotatedP1.x, rotatedP2.x, rotatedP3.x, rotatedP4.x];
+                    const allY = [rotatedP1.y, rotatedP2.y, rotatedP3.y, rotatedP4.y];
 
-                    // Move the dragged element to the end of the array so it's drawn last (on top)
-                    // Except if it's a board and there are other non-board elements on top of it
-                    if (!el.isBoard) { // Only move pedais to the top
-                        elements.splice(i, 1);
-                        elements.push(draggedElement);
-                    } else { // If it's a board, check if there are pedais on top of it
-                        const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
-                            (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
-                             otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
-                        );
-                        if (hasPedalsAbove) {
-                            isDragging = false;
-                            draggedElement = null;
-                            canvas.classList.remove('dragging');
-                            showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
-                            return;
-                        }
-                        elements.splice(i, 1);
-                        const firstPedalIndex = elements.findIndex(item => !item.isBoard);
-                        if (firstPedalIndex !== -1) {
-                            elements.splice(firstPedalIndex, 0, draggedElement);
-                        } else {
+                    const minBoundX = Math.min(...allX);
+                    const maxBoundX = Math.max(...allX);
+                    const minBoundY = Math.min(...allY);
+                    const maxBoundY = Math.max(...allY);
+
+                    // If mouseX/Y is within this rotated bounding box
+                    if (mouseX >= minBoundX && mouseX <= maxBoundX &&
+                        mouseY >= minBoundY && mouseY <= maxBoundY) {
+                        isDragging = true;
+                        draggedElement = el;
+                        selectedElement = el; // Set selected element
+                        clickedOnElement = true;
+
+                        // Calculate offset in cm relative to the element's original top-left corner
+                        // Use mouseXCm and mouseYCm directly for offset calculation
+                        offsetXCm = mouseXCm - el.x;
+                        offsetYCm = mouseYCm - el.y;
+                        canvas.classList.add('dragging');
+
+                        // Move the dragged element to the end of the array so it's drawn last (on top)
+                        // Except if it's a board and there are other non-board elements on top of it
+                        if (!el.isBoard) { // Only move pedais to the top
+                            elements.splice(i, 1);
                             elements.push(draggedElement);
+                        } else { // If it's a board, check if there are pedais on top of it
+                            const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
+                                (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
+                                 otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
+                            );
+                            if (hasPedalsAbove) {
+                                isDragging = false;
+                                draggedElement = null;
+                                canvas.classList.remove('dragging');
+                                showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
+                                return;
+                            }
+                            elements.splice(i, 1);
+                            const firstPedalIndex = elements.findIndex(item => !item.isBoard);
+                            if (firstPedalIndex !== -1) {
+                                elements.splice(firstPedalIndex, 0, draggedElement);
+                            } else {
+                                elements.push(draggedElement);
+                            }
                         }
+                        drawElements();
+                        break;
                     }
-                    drawElements();
-                    break;
                 }
-            }
-            if (!clickedOnElement) {
-                selectedElement = null; // Limpa a seleção se clicou fora dos elementos
-                drawElements(); // Redesenha para remover o destaque de seleção
-            }
-        });
+                if (!clickedOnElement) {
+                    selectedElement = null; // Limpa a seleção se clicou fora dos elementos
+                    drawElements(); // Redesenha para remover o destaque de seleção
+                }
+            });
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (!isDragging || !draggedElement) return;
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging || !draggedElement) return;
 
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
 
-            // Convert mouse coordinates from pixels to cm using the fixed scale
-            const mouseXCm = mouseX / pixelsPerCm;
-            const mouseYCm = mouseY / pixelsPerCm;
+                // Calculate the conceptual board's offset within the canvas
+                const displayBoardWidthPx = effectiveBoardWidthCm * pixelsPerCm;
+                const displayBoardHeightPx = effectiveBoardHeightCm * pixelsPerCm;
+                const boardOffsetX = (canvas.width - displayBoardWidthPx) / 2;
+                const boardOffsetY = (canvas.height - displayBoardHeightPx) / 2;
 
-            // Calculate new element position in cm
-            let newXCm = mouseXCm - offsetXCm;
-            let newYCm = mouseYCm - offsetYCm;
+                // Adjust mouse coordinates to be relative to the conceptual board's origin
+                const mouseXAdjusted = mouseX - boardOffsetX;
+                const mouseYAdjusted = mouseY - boardOffsetY;
 
-            // Limit the element within the canvas boundaries (in cm)
-            const elementWidthCm = draggedElement.width;
-            const elementHeightCm = draggedElement.height;
+                // Convert adjusted mouse coordinates from pixels to cm
+                const mouseXCm = mouseXAdjusted / pixelsPerCm;
+                const mouseYCm = mouseYAdjusted / pixelsPerCm;
 
-            newXCm = Math.max(0, Math.min(newXCm, canvas.width / pixelsPerCm - elementWidthCm));
-            newYCm = Math.max(0, Math.min(newYCm, canvas.height / pixelsPerCm - elementHeightCm));
+                // Calculate new element position in cm
+                let newXCm = mouseXCm - offsetXCm;
+                let newYCm = mouseYCm - offsetYCm;
 
-            draggedElement.x = newXCm;
-            draggedElement.y = newYCm;
+                // Limit the element within the conceptual board boundaries (in cm)
+                const elementWidthCm = draggedElement.width;
+                const elementHeightCm = draggedElement.height;
 
-            drawElements();
-        });
+                newXCm = Math.max(0, Math.min(newXCm, effectiveBoardWidthCm - elementWidthCm));
+                newYCm = Math.max(0, Math.min(newYCm, effectiveBoardHeightCm - elementHeightCm));
 
-        canvas.addEventListener('mouseup', () => {
-            isDragging = false;
-            draggedElement = null;
-            canvas.classList.remove('dragging');
-            drawElements(); // Recalculate dimensions after dropping the element
-            saveElements(); // Save after dropping
-        });
+                draggedElement.x = newXCm;
+                draggedElement.y = newYCm;
 
-        canvas.addEventListener('mouseout', () => {
-            // If mouse leaves the canvas while dragging, drop the element
-            if (isDragging) {
+                drawElements();
+            });
+
+            canvas.addEventListener('mouseup', () => {
                 isDragging = false;
                 draggedElement = null;
                 canvas.classList.remove('dragging');
                 drawElements();
-                saveElements(); // Save if dragging stops by leaving canvas
-            }
-        });
+                saveElements(); // Salva após soltar
+            });
 
-        // Drag and drop logic for touch (Touch)
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent page scrolling
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
-
-            // Converte as coordenadas do toque de pixels para cm usando a escala fixa
-            const touchXCm = touchX / pixelsPerCm;
-            const touchYCm = touchY / pixelsPerCm;
-
-            // Check if clicked on delete icon first
-            if (selectedElement && selectedElement.deleteIconRect) {
-                const iconRect = selectedElement.deleteIconRect;
-                if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
-                    touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
-                    // Clicked on delete icon
-                    const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
-                    if (indexToRemove !== -1) {
-                        elements.splice(indexToRemove, 1); // Remove the element
-                        selectedElement = null; // Clear selection
-                        drawElements();
-                        saveElements(); // Save after deletion
-                        showCustomAlert('Elemento excluído!');
-                    }
+            canvas.addEventListener('mouseout', () => {
+                // If mouse leaves the canvas while dragging, drop the element
+                if (isDragging) {
                     isDragging = false;
                     draggedElement = null;
                     canvas.classList.remove('dragging');
-                    return; // Stop further processing
-                }
-            }
-
-            // Check if clicked on rotation icon
-            if (selectedElement && selectedElement.rotationIconRect) {
-                const iconRect = selectedElement.rotationIconRect;
-                if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
-                    touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
-                    // Clicked on rotation icon
-                    [selectedElement.width, selectedElement.height] = [selectedElement.height, selectedElement.width];
-                    // Update rotation angle by 90 degrees (PI/2 radians)
-                    selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
                     drawElements();
-                    saveElements(); // Save after rotation
-                    isDragging = false; // Prevent dragging after rotation
-                    draggedElement = null;
-                    canvas.classList.remove('dragging');
-                    showCustomAlert('Elemento girado!');
-                    return; // Stop further processing
+                    saveElements(); // Save if dragging stops by leaving canvas
                 }
-            }
+            });
+        }
 
-            let clickedOnElement = false;
-            for (let i = elements.length - 1; i >= 0; i--) {
-                const el = elements[i];
-                const elWidthCm = el.width;
-                const elHeightCm = el.height;
+        // Drag and drop logic for touch (Touch)
+        function setupCanvasTouchEvents() {
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevent page scrolling
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
 
-                if (touchXCm >= el.x && touchXCm <= el.x + elWidthCm &&
-                    touchYCm >= el.y && touchYCm <= el.y + elHeightCm) {
-                    isDragging = true;
-                    draggedElement = el;
-                    selectedElement = el; // Define o elemento selecionado
-                    clickedOnElement = true;
+                // Calculate the conceptual board's offset within the canvas
+                const displayBoardWidthPx = effectiveBoardWidthCm * pixelsPerCm;
+                const displayBoardHeightPx = effectiveBoardHeightCm * pixelsPerCm;
+                const boardOffsetX = (canvas.width - displayBoardWidthPx) / 2;
+                const boardOffsetY = (canvas.height - displayBoardHeightPx) / 2;
 
-                    offsetXCm = touchXCm - el.x;
-                    offsetYCm = touchYCm - el.y;
-                    canvas.classList.add('dragging');
+                // Adjust touch coordinates to be relative to the conceptual board's origin
+                const touchXAdjusted = touchX - boardOffsetX;
+                const touchYAdjusted = touchY - boardOffsetY;
 
-                    if (!el.isBoard) {
-                        elements.splice(i, 1);
-                        elements.push(draggedElement);
-                    } else {
-                        const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
-                            (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
-                             otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
-                        );
-                        if (hasPedalsAbove) {
-                            isDragging = false;
-                            draggedElement = null;
-                            canvas.classList.remove('dragging');
-                            showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
-                            return;
+                // Converte as coordenadas do toque de pixels para cm usando a escala fixa
+                const touchXCm = touchXAdjusted / pixelsPerCm;
+                const touchYCm = touchYAdjusted / pixelsPerCm;
+
+                // Check if clicked on delete icon first
+                if (selectedElement && selectedElement.deleteIconRect) {
+                    const iconRect = selectedElement.deleteIconRect;
+                    if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
+                        touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
+                        const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
+                        if (indexToRemove !== -1) {
+                            elements.splice(indexToRemove, 1);
+                            selectedElement = null;
+                            drawElements();
+                            saveElements();
                         }
-                        elements.splice(i, 1);
-                        const firstPedalIndex = elements.findIndex(item => !item.isBoard);
-                        if (firstPedalIndex !== -1) {
-                            elements.splice(firstPedalIndex, 0, draggedElement);
-                        } else {
-                            elements.push(draggedElement);
-                        }
+                        isDragging = false;
+                        draggedElement = null;
+                        canvas.classList.remove('dragging');
+                        return;
                     }
-                    drawElements();
-                    break;
                 }
-            }
-            if (!clickedOnElement) {
-                selectedElement = null; // Limpa a seleção se clicou fora dos elementos
-                drawElements(); // Redesenha para remover o destaque de seleção
-            }
-        });
 
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Previne a rolagem da página
-            if (!isDragging || !draggedElement) return;
+                // Check if clicked on rotation icon
+                if (selectedElement && selectedElement.rotationIconRect) {
+                    const iconRect = selectedElement.rotationIconRect;
+                    if (touchX >= iconRect.x && touchX <= iconRect.x + iconRect.width &&
+                        touchY >= iconRect.y && touchY <= iconRect.y + iconRect.height) {
+                        // Update rotation angle by 90 degrees (PI/2 radians)
+                        selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
+                        drawElements();
+                        saveElements();
+                        isDragging = false;
+                        draggedElement = null;
+                        canvas.classList.remove('dragging');
+                        return;
+                    }
+                }
 
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
+                let clickedOnElement = false;
+                for (let i = elements.length - 1; i >= 0; i--) {
+                    const el = elements[i];
 
-            const touchXCm = touchX / pixelsPerCm;
-            const touchYCm = touchY / pixelsPerCm;
+                    // Calculate the four corners of the UNROTATED rectangle in canvas pixels, adjusted for boardOffsetX/Y
+                    const p1 = { x: el.x * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p2 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: el.y * pixelsPerCm + boardOffsetY };
+                    const p3 = { x: el.x * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
+                    const p4 = { x: (el.x + el.width) * pixelsPerCm + boardOffsetX, y: (el.y + el.height) * pixelsPerCm + boardOffsetY };
 
-            let newXCm = touchXCm - offsetXCm;
-            let newYCm = touchYCm - offsetYCm;
+                    // Center of rotation for the element in canvas pixels, adjusted for boardOffsetX/Y
+                    const rotCenterX = p1.x + (el.width * pixelsPerCm) / 2;
+                    const rotCenterY = p1.y + (el.height * pixelsPerCm) / 2;
+                    const angle = el.currentRotationAngle;
 
-            const elementWidthCm = draggedElement.width;
-            const elementHeightCm = draggedElement.height;
+                    // Rotate the four corners
+                    const rotatedP1 = rotatePoint(p1.x, p1.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP2 = rotatePoint(p2.x, p2.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP3 = rotatePoint(p3.x, p3.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP4 = rotatePoint(p4.x, p4.y, rotCenterX, rotCenterY, angle);
 
-            newXCm = Math.max(0, Math.min(newXCm, canvas.width / pixelsPerCm - elementWidthCm));
-            newYCm = Math.max(0, Math.min(newYCm, canvas.height / pixelsPerCm - elementHeightCm));
+                    // Find the min/max X and Y to get the bounding box of the rotated element
+                    const allX = [rotatedP1.x, rotatedP2.x, rotatedP3.x, rotatedP4.x];
+                    const allY = [rotatedP1.y, rotatedP2.y, rotatedP3.y, rotatedP4.y];
 
-            draggedElement.x = newXCm;
-            draggedElement.y = newYCm;
+                    const minBoundX = Math.min(...allX);
+                    const maxBoundX = Math.max(...allX);
+                    const minBoundY = Math.min(...allY);
+                    const maxBoundY = Math.max(...allY);
 
-            drawElements();
-        });
+                    // If touchX/Y is within this rotated bounding box
+                    if (touchX >= minBoundX && touchX <= maxBoundX &&
+                        touchY >= minBoundY && touchY <= maxBoundY) {
+                        isDragging = true;
+                        draggedElement = el;
+                        selectedElement = el;
+                        clickedOnElement = true;
 
-        canvas.addEventListener('touchend', () => {
-            isDragging = false;
-            draggedElement = null;
-            canvas.classList.remove('dragging');
-            drawElements();
-            saveElements(); // Salva após soltar
-        });
+                        offsetXCm = touchXCm - el.x;
+                        offsetYCm = touchYCm - el.y;
+                        canvas.classList.add('dragging');
 
-        // --- Custom Alert Modal ---
-        function showCustomAlert(message) {
-            const modalId = 'custom-alert-modal';
-            let modal = document.getElementById(modalId);
+                        if (!el.isBoard) {
+                            elements.splice(i, 1);
+                            elements.push(draggedElement);
+                        } else {
+                            const hasPedalsAbove = elements.slice(i + 1).some(otherEl => !otherEl.isBoard &&
+                                (otherEl.x < el.x + el.width && otherEl.x + el.width > el.x &&
+                                 otherEl.y < el.y + el.height && otherEl.y + el.height > el.y)
+                            );
+                            if (hasPedalsAbove) {
+                                isDragging = false;
+                                draggedElement = null;
+                                canvas.classList.remove('dragging');
+                                showCustomAlert('Não é possível arrastar o pedalboard enquanto houver pedais em cima dele.');
+                                return;
+                            }
+                            elements.splice(i, 1);
+                            const firstPedalIndex = elements.findIndex(item => !item.isBoard);
+                            if (firstPedalIndex !== -1) {
+                                elements.splice(firstPedalIndex, 0, draggedElement);
+                            } else {
+                                elements.push(draggedElement);
+                            }
+                        }
+                        drawElements();
+                        break;
+                    }
+                }
+                if (!clickedOnElement) {
+                    selectedElement = null;
+                    drawElements();
+                }
+            });
 
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = modalId;
-                modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4';
-                modal.innerHTML = `
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
-                        <p class="text-lg font-semibold text-white mb-4" id="custom-alert-message"></p>
-                        <button id="custom-alert-ok-btn" class="px-4 py-2 rounded-md font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 w-full">OK</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!isDragging || !draggedElement) return;
 
-            document.getElementById('custom-alert-message').textContent = message;
-            modal.classList.remove('hidden');
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
 
-            document.getElementById('custom-alert-ok-btn').onclick = () => {
-                modal.classList.add('hidden');
-            };
+                // Calculate the conceptual board's offset within the canvas
+                const displayBoardWidthPx = effectiveBoardWidthCm * pixelsPerCm;
+                const displayBoardHeightPx = effectiveBoardHeightCm * pixelsPerCm;
+                const boardOffsetX = (canvas.width - displayBoardWidthPx) / 2;
+                const boardOffsetY = (canvas.height - displayBoardHeightPx) / 2;
+
+                // Adjust touch coordinates to be relative to the conceptual board's origin
+                const touchXAdjusted = touchX - boardOffsetX;
+                const touchYAdjusted = touchY - boardOffsetY;
+
+                const touchXCm = touchXAdjusted / pixelsPerCm;
+                const touchYCm = touchYAdjusted / pixelsPerCm;
+
+                let newXCm = touchXCm - offsetXCm;
+                let newYCm = touchYCm - offsetYCm;
+
+                const elementWidthCm = draggedElement.width;
+                const elementHeightCm = draggedElement.height;
+
+                newXCm = Math.max(0, Math.min(newXCm, effectiveBoardWidthCm - elementWidthCm));
+                newYCm = Math.max(0, Math.min(newYCm, effectiveBoardHeightCm - elementHeightCm));
+
+                draggedElement.x = newXCm;
+                draggedElement.y = newYCm;
+
+                drawElements();
+            });
+
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+                draggedElement = null;
+                canvas.classList.remove('dragging');
+                drawElements();
+                saveElements();
+            });
         }
 
-        // Sidebar Toggle Logic
-        toggleSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-            // Adjust canvas position and size after sidebar toggle
-            resizeCanvas();
-        });
-
-        // Close sidebar button (inside sidebar)
-        closeSidebarBtn.addEventListener('click', () => {
-            sidebar.classList.add('-translate-x-full');
-            resizeCanvas();
-        });
-
-        // Initial check for sidebar visibility on load for desktop
-        // If on desktop, and sidebar is initially hidden, show it.
-        // This ensures the sidebar is visible by default on desktop.
-        if (window.innerWidth >= 1024) {
-            sidebar.classList.remove('-translate-x-full');
-            resizeCanvas();
+        // Functions to populate dropdowns
+        function populatePedalboardDropdown() {
+            if (!predefinedBoardSelect) return;
+            predefinedBoardSelect.innerHTML = '<option value="">-- Selecione um Pedalboard --</option>'; // Clear existing options
+            mockPedalboardData.forEach(board => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(board); // Store object as string
+                option.textContent = `${board.name} (${board.width}x${board.height} cm)`;
+                predefinedBoardSelect.appendChild(option);
+            });
         }
+
+        function populatePedalDropdown() {
+            if (!predefinedPedalSelect) return;
+            predefinedPedalSelect.innerHTML = '<option value="">-- Selecione um Pedal --</option>'; // Clear existing options
+            mockPedalData.forEach(pedal => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(pedal); // Store object as string
+                option.textContent = `${pedal.name} (${pedal.width}x${pedal.height} cm)`;
+                predefinedPedalSelect.appendChild(option);
+            });
+        }
+
+        // Keyboard event handler for shortcuts
+        function handleKeyDown(e) {
+            if (!selectedElement) return; // Only act if an element is selected
+
+            let changed = false;
+            let currentX = selectedElement.x;
+            let currentY = selectedElement.y;
+
+            // Get current dimensions for boundary checks
+            const elementWidthCm = selectedElement.width;
+            const elementHeightCm = selectedElement.height;
+
+            switch (e.key) {
+                case 'Delete':
+                case 'Backspace':
+                    e.preventDefault(); // Prevent browser back navigation for Backspace
+                    const indexToRemove = elements.findIndex(el => el.id === selectedElement.id);
+                    if (indexToRemove !== -1) {
+                        elements.splice(indexToRemove, 1);
+                        selectedElement = null; // Deselect after deletion
+                        changed = true;
+                    }
+                    break;
+                case 'r': // 'r' for rotate (case-insensitive)
+                case 'R':
+                    e.preventDefault();
+                    selectedElement.currentRotationAngle = (selectedElement.currentRotationAngle + Math.PI / 2) % (2 * Math.PI);
+                    changed = true;
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    currentY = Math.max(0, currentY - moveIncrementCm);
+                    if (selectedElement.y !== currentY) {
+                        selectedElement.y = currentY;
+                        changed = true;
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    currentY = Math.min(effectiveBoardHeightCm - elementHeightCm, currentY + moveIncrementCm);
+                    if (selectedElement.y !== currentY) {
+                        selectedElement.y = currentY;
+                        changed = true;
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    currentX = Math.max(0, currentX - moveIncrementCm);
+                    if (selectedElement.x !== currentX) {
+                        selectedElement.x = currentX;
+                        changed = true;
+                    }
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    currentX = Math.min(effectiveBoardWidthCm - elementWidthCm, currentX + moveIncrementCm);
+                    if (selectedElement.x !== currentX) {
+                        selectedElement.x = currentX;
+                        changed = true;
+                    }
+                    break;
+            }
+
+            if (changed) {
+                drawElements();
+                saveElements();
+            }
+        }
+
+
+        // Authenticate anonymously
+        signInAnonymously(auth)
+            .then((userCredential) => {
+                userId = userCredential.user.uid;
+                console.log("Firebase initialized and user authenticated with ID:", userId);
+                loadPedalboardFromUrl(); // Now that Firebase is ready, try to load from URL
+            })
+            .catch((error) => {
+                console.error("Error signing in anonymously:", error);
+                showCustomAlert("Erro ao autenticar no Firebase. Algumas funcionalidades podem não estar disponíveis.");
+                userId = null; // Ensure userId is null if auth fails
+                loadElementsAndSettings(); // Fallback to local storage if Firebase fails
+            });
+
+        // Event listener for DOMContentLoaded to ensure all HTML elements are loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOMContentLoaded fired. Initializing DOM element references and event listeners.");
+            canvas = document.getElementById('pedalboardCanvas');
+            ctx = canvas.getContext('2d');
+
+            addBoardBtn = document.getElementById('addBoardBtn');
+            addPedalBtn = document.getElementById('addPedalBtn');
+            clearBoardBtn = document.getElementById('clearBoardBtn');
+            shareBoardBtn = document.getElementById('shareBoardBtn');
+
+            boardNameInput = document.getElementById('boardName');
+            boardWidthInput = document.getElementById('boardWidth');
+            boardHeightInput = document.getElementById('boardHeight');
+
+            pedalNameInput = document.getElementById('pedalName');
+            pedalWidthInput = document.getElementById('pedalWidth');
+            pedalHeightInput = document.getElementById('pedalHeight');
+            pedalColorInput = document.getElementById('pedalColor');
+
+            sidebar = document.getElementById('sidebar');
+            toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+            closeSidebarBtn = document.getElementById('closeSidebarBtn');
+            canvasSection = document.getElementById('canvas-section');
+
+            shareModal = document.getElementById('shareModal');
+            shareUrlInput = document.getElementById('shareUrlInput');
+            copyShareUrlBtn = document.getElementById('copyShareUrlBtn');
+            closeShareModalBtn = document.getElementById('closeShareModalBtn');
+
+            // New predefined dropdowns and buttons (references still needed even if buttons are removed from HTML)
+            predefinedBoardSelect = document.getElementById('predefinedBoardSelect');
+            predefinedPedalSelect = document.getElementById('predefinedPedalSelect');
+
+            // Phase 4 - New DOM elements references
+            mainBoardWidthInput = document.getElementById('mainBoardWidthInput');
+            mainBoardHeightInput = document.getElementById('mainBoardHeightInput');
+            resetBoardViewBtn = document.getElementById('resetBoardViewBtn');
+
+            // Populate dropdowns on load
+            populatePedalboardDropdown();
+            populatePedalDropdown();
+
+            // Load initial settings and elements
+            loadElementsAndSettings(); // This will also update the UI inputs.
+
+
+            // Attach all event listeners here, after elements are guaranteed to exist
+            addBoardBtn.addEventListener('click', () => {
+                const name = boardNameInput.value.trim();
+                const width = parseFloat(boardWidthInput.value);
+                const height = parseFloat(boardHeightInput.value);
+
+                if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                    showCustomAlert('Por favor, preencha o nome, largura e altura do pedalboard corretamente.');
+                    return;
+                }
+
+                const newBoard = {
+                    id: Date.now(),
+                    name: name,
+                    width: width,
+                    height: height,
+                    x: (effectiveBoardWidthCm / 2) - (width / 2), // Position in center of conceptual board
+                    y: (effectiveBoardHeightCm / 2) - (height / 2), // Position in center of conceptual board
+                    color: '#000000', // Fixed to black
+                    isBoard: true, // Property to identify as a board
+                    currentRotationAngle: 0 // Initialize rotation angle
+                };
+
+                elements.push(newBoard);
+                drawElements();
+                saveElements(); // Save after adding
+                // Clear input fields
+                boardNameInput.value = '';
+                boardWidthInput.value = '60';
+                boardHeightInput.value = '30';
+            });
+
+            addPedalBtn.addEventListener('click', () => {
+                const name = pedalNameInput.value.trim();
+                const width = parseFloat(pedalWidthInput.value);
+                const height = parseFloat(pedalHeightInput.value);
+                const color = pedalColorInput.value;
+
+                if (!name || isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                    showCustomAlert('Por favor, preencha o nome, largura e altura do pedal corretamente.');
+                    return;
+                }
+
+                const newPedal = {
+                    id: Date.now(),
+                    name: name,
+                    width: width,
+                    height: height,
+                    x: (effectiveBoardWidthCm / 2) - (width / 2), // Position in center of conceptual board
+                    y: (effectiveBoardHeightCm / 2) - (height / 2), // Position in center of conceptual board
+                    color: color,
+                    isBoard: false, // Property to identify as a pedal
+                    currentRotationAngle: 0 // Initialize rotation angle
+                };
+
+                elements.push(newPedal);
+                drawElements();
+                saveElements(); // Save after adding
+                // Clear input fields
+                pedalNameInput.value = '';
+                pedalWidthInput.value = '7';
+                pedalHeightInput.value = '12';
+                pedalColorInput.value = '#3498db';
+            });
+
+            // Event listener for adding predefined pedalboard (now on change)
+            predefinedBoardSelect.addEventListener('change', () => {
+                const selectedOptionValue = predefinedBoardSelect.value;
+                if (!selectedOptionValue) {
+                    return; // Do nothing if the placeholder option is selected
+                }
+                const boardData = JSON.parse(selectedOptionValue);
+                const newBoard = {
+                    id: Date.now(),
+                    name: boardData.name,
+                    width: boardData.width,
+                    height: boardData.height,
+                    x: (effectiveBoardWidthCm / 2) - (boardData.width / 2), // Position in center
+                    y: (effectiveBoardHeightCm / 2) - (boardData.height / 2), // Position in center
+                    color: boardData.color || '#000000', // Use predefined color or default to black
+                    isBoard: true,
+                    currentRotationAngle: 0
+                };
+                elements.push(newBoard);
+                drawElements();
+                saveElements();
+                predefinedBoardSelect.value = ""; // Reset dropdown to placeholder after selection
+            });
+
+            // Event listener for adding predefined pedal (now on change)
+            predefinedPedalSelect.addEventListener('change', () => {
+                const selectedOptionValue = predefinedPedalSelect.value;
+                if (!selectedOptionValue) {
+                    return; // Do nothing if the placeholder option is selected
+                }
+                const pedalData = JSON.parse(selectedOptionValue);
+                const newPedal = {
+                    id: Date.now(),
+                    name: pedalData.name,
+                    width: pedalData.width,
+                    height: pedalData.height,
+                    x: (effectiveBoardWidthCm / 2) - (pedalData.width / 2), // Position in center
+                    y: (effectiveBoardHeightCm / 2) - (pedalData.height / 2), // Position in center
+                    color: pedalData.color || '#3498db', // Use predefined color or default
+                    isBoard: false,
+                    currentRotationAngle: 0
+                };
+                elements.push(newPedal);
+                drawElements();
+                saveElements();
+                predefinedPedalSelect.value = ""; // Reset dropdown to placeholder after selection
+            });
+
+            // Phase 4 - Event listeners for new inputs
+            mainBoardWidthInput.addEventListener('input', () => {
+                const newWidth = parseFloat(mainBoardWidthInput.value);
+                if (!isNaN(newWidth) && newWidth > 0) {
+                    effectiveBoardWidthCm = newWidth;
+                    resizeCanvas(); // Recalculate scale and redraw
+                    saveElements();
+                }
+            });
+
+            mainBoardHeightInput.addEventListener('input', () => {
+                const newHeight = parseFloat(mainBoardHeightInput.value);
+                if (!isNaN(newHeight) && newHeight > 0) {
+                    effectiveBoardHeightCm = newHeight;
+                    resizeCanvas(); // Recalculate scale and redraw
+                    saveElements();
+                }
+            });
+
+            resetBoardViewBtn.addEventListener('click', () => {
+                console.log("Redefinir Visão da Tela button clicked.");
+                resizeCanvas(); // Force recalculation and redraw to fit
+                saveElements();
+            });
+
+
+            clearBoardBtn.addEventListener('click', () => {
+                elements = [];
+                selectedElement = null; // Clear selection
+                drawElements();
+                saveElements(); // Save after clearing
+                showCustomAlert('Todos os elementos foram limpos!');
+            });
+
+            shareBoardBtn.addEventListener('click', async () => {
+                console.log("Share button clicked. Initiating save process...");
+                const boardId = await savePedalboardForSharing();
+                if (boardId) {
+                    console.log("Board ID obtained:", boardId, "Attempting to show share modal.");
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?boardId=${boardId}`;
+                    shareUrlInput.value = shareUrl;
+                    console.log("shareUrlInput.value set to:", shareUrlInput.value); // New log
+                    console.log("shareModal element before showing:", shareModal); // Debug log
+                    shareModal.classList.remove('hidden');
+                    console.log("Share modal should now be visible.");
+                } else {
+                    console.log("Failed to get board ID. Share modal will not be shown.");
+                }
+            });
+
+            copyShareUrlBtn.addEventListener('click', () => {
+                shareUrlInput.select();
+                document.execCommand('copy');
+                showCustomAlert('URL copiada para a área de transferência!');
+                console.log("Share URL copied.");
+            });
+
+            closeShareModalBtn.addEventListener('click', () => {
+                shareModal.classList.add('hidden');
+                console.log("Share modal hidden.");
+            });
+
+            setupCanvasMouseEvents(); // Setup mouse events
+            setupCanvasTouchEvents(); // Setup touch events
+
+            toggleSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+                resizeCanvas();
+            });
+
+            closeSidebarBtn.addEventListener('click', () => {
+                sidebar.classList.add('-translate-x-full');
+                resizeCanvas();
+            });
+
+            // Initial check for sidebar visibility on load for desktop
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+            }
+            resizeCanvas(); // Initial call to resize and draw elements (after loading settings)
+        }); // End of DOMContentLoaded
+
+        // Add event listener for window resize outside DOMContentLoaded as it's a global event
+        window.addEventListener('resize', resizeCanvas);
+        // Add keyboard event listener globally
+        document.addEventListener('keydown', handleKeyDown);
 
     </script>
 </body>
