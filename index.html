@@ -489,7 +489,7 @@
         function inchesToCm(inches) {
             // 1 polegada = 2.54 centímetros
             const cm = inches * 2.54;
-            return cm.toFixed(2);
+            return cm;
         }
 
 
@@ -1212,7 +1212,7 @@
             predefinedPedalData.forEach(pedal => {
                 const option = document.createElement('option');
                 option.value = JSON.stringify(pedal); // Store object as string
-                option.textContent = `${pedal.Name} (${inchesToCm(pedal.Width)}x${inchesToCm(pedal.Height)} cm)`;
+                option.textContent = `${pedal.Name} (${inchesToCm(pedal.Width).toFixed(1)}x${inchesToCm(pedal.Height).toFixed(1)} cm)`;
                 predefinedPedalSelect.appendChild(option);
             });
         }
@@ -1477,10 +1477,10 @@
                 const newPedal = {
                     id: Date.now(),
                     name: pedalData.Name,
-                    width: inchesToCm(pedalData.Width),
-                    height: inchesToCm(pedalData.Height),
-                    x: (effectiveBoardWidthCm / 2) - (inchesToCm(pedalData.Width) / 2), // Position in center
-                    y: (effectiveBoardHeightCm / 2) - (inchesToCm(pedalData.Height) / 2), // Position in center
+                    width: inchesToCm(pedalData.Width).toFixed(1),
+                    height: inchesToCm(pedalData.Height).toFixed(1),
+                    x: (effectiveBoardWidthCm / 2) - (inchesToCm(pedalData.Width).toFixed(1) / 2), // Position in center
+                    y: (effectiveBoardHeightCm / 2) - (inchesToCm(pedalData.Height).toFixed(1) / 2), // Position in center
                     color: pedalData.color || '#3498db', // Use predefined color or default
                     isBoard: false,
                     currentRotationAngle: 0
