@@ -279,15 +279,6 @@
 
             <hr class="my-8 border-gray-700">
 
-            <!-- REMOVIDO: Seção "Configurar Escala" -->
-            <!-- <h2 class="text-2xl font-semibold mb-4 text-blue-300">Configurar Escala</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="scaleInput" class="block text-sm font-medium text-gray-300 mb-1">Pixels por cm:</label>
-                    <input type="number" id="scaleInput" class="input-field w-full" value="15" min="1">
-                </div>
-            </div> -->
-
             <button id="clearBoardBtn" class="btn btn-danger w-full mt-4">Limpar Tudo</button>
         </aside>
 
@@ -370,20 +361,15 @@
         let mainBoardWidthInput, mainBoardHeightInput, resetBoardViewBtn;
 
 
-        // --- Mock Data for Predefined Pedals and Pedalboards ---
+        // --- Mock Data for Predefined Pedalboards ---
         const mockPedalboardData = [
             { name: "Standard 60x30", width: 60, height: 30, color: "#000000" },
             { name: "Compact 45x20", width: 45, height: 20, color: "#000000" },
             { name: "Large 80x40", width: 80, height: 40, color: "#000000" }
         ];
 
-        const mockPedalData = [
-            { name: "Overdrive (Std)", width: 7, height: 12, color: "#DB2777" }, // Pink
-            { name: "Distortion (Std)", width: 7, height: 12, color: "#EF4444" }, // Red
-            { name: "Delay (Big)", width: 10, height: 15, color: "#3B82F6" },    // Blue
-            { name: "Reverb (Compact)", width: 6, height: 10, color: "#10B981" }, // Green
-            { name: "Wah (Large)", width: 11, height: 25, color: "#F59E0B" }     // Amber
-        ];
+        // This will now be populated from pedals.json
+        let predefinedPedalData = [];
 
 
         // --- Custom Alert Modal ---
@@ -754,12 +740,6 @@
                     const angle = el.currentRotationAngle;
 
                     // Rotate the four corners to find the bounding box of the rotated element
-                    const rotatedP1 = rotatePoint(p1.x, p1.y, rotCenterX, rotCenterY, angle);
-                    const rotatedP2 = rotatePoint(p2.x, p2.y, rotCenterX, rotCenterY, angle);
-                    const rotatedP3 = rotatePoint(p3.x, p3.y, rotCenterX, rotCenterY, angle);
-                    const rotatedP4 = rotatePoint(p4.x, p4.y, rotCenterX, rotCenterY, angle);
-
-                    // Find the min/max X and Y to get the bounding box of the rotated element
                     const allX = [rotatedP1.x, rotatedP2.x, rotatedP3.x, rotatedP4.x];
                     const allY = [rotatedP1.y, rotatedP2.y, rotatedP3.y, rotatedP4.y];
 
@@ -1213,15 +1193,42 @@
             });
         }
 
+        // Updated function to populate pedal dropdown from `predefinedPedalData`
         function populatePedalDropdown() {
             if (!predefinedPedalSelect) return;
             predefinedPedalSelect.innerHTML = '<option value="">-- Selecione um Pedal --</option>'; // Clear existing options
-            mockPedalData.forEach(pedal => {
+            predefinedPedalData.forEach(pedal => {
                 const option = document.createElement('option');
                 option.value = JSON.stringify(pedal); // Store object as string
                 option.textContent = `${pedal.name} (${pedal.width}x${pedal.height} cm)`;
                 predefinedPedalSelect.appendChild(option);
             });
+        }
+
+        // Function to fetch pedal data from pedals.json
+        async function fetchPedalsData() {
+            try {
+                // Simulate fetching from 'pedals.json'. In a real scenario, this would be a fetch call:
+                const response = await fetch('pedals.json');
+                const data = await response.json();
+                
+                // For demonstration, use hardcoded data directly
+                /* const data = [
+                    { name: "Overdrive (Std)", width: 7, height: 12, color: "#DB2777" }, // Pink
+                    { name: "Distortion (Std)", width: 7, height: 12, color: "#EF4444" }, // Red
+                    { name: "Delay (Big)", width: 10, height: 15, color: "#3B82F6" },    // Blue
+                    { name: "Reverb (Compact)", width: 6, height: 10, color: "#10B981" }, // Green
+                    { name: "Wah (Large)", width: 11, height: 25, color: "#F59E0B" },     // Amber
+                    { name: "Chorus (Small)", width: 6, height: 11, color: "#FFD700" }, // Gold
+                    { name: "Fuzz (Square)", width: 8, height: 8, color: "#800080" }, // Purple
+                    { name: "Compressor (Mini)", width: 5, height: 9, color: "#00CED1" } // Dark Cyan
+                ]; */
+                predefinedPedalData = data;
+                populatePedalDropdown();
+            } catch (error) {
+                console.error("Erro ao carregar dados de pedais:", error);
+                showCustomAlert("Erro ao carregar a lista de pedais pré-definidos.");
+            }
         }
 
         // Keyboard event handler for shortcuts
@@ -1349,7 +1356,8 @@
 
             // Populate dropdowns on load
             populatePedalboardDropdown();
-            populatePedalDropdown();
+            fetchPedalsData(); // Fetch and populate pedal dropdown
+
 
             // Load initial settings and elements
             loadElementsAndSettings(); // This will also update the UI inputs.
