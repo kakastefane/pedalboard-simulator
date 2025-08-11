@@ -1459,13 +1459,14 @@
                     return; // Do nothing if the placeholder option is selected
                 }
                 const pedalData = JSON.parse(selectedOptionValue);
+                console.log(pedalData);
                 const newPedal = {
                     id: Date.now(),
-                    name: pedalData.name,
-                    width: pedalData.width,
-                    height: pedalData.height,
-                    x: (effectiveBoardWidthCm / 2) - (pedalData.width / 2), // Position in center
-                    y: (effectiveBoardHeightCm / 2) - (pedalData.height / 2), // Position in center
+                    name: pedalData.Name,
+                    width: pedalData.Width,
+                    height: pedalData.Height,
+                    x: (effectiveBoardWidthCm / 2) - (pedalData.Width / 2), // Position in center
+                    y: (effectiveBoardHeightCm / 2) - (pedalData.Height / 2), // Position in center
                     color: pedalData.color || '#3498db', // Use predefined color or default
                     isBoard: false,
                     currentRotationAngle: 0
