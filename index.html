@@ -1471,27 +1471,31 @@
 
 
 
-            // Event listener for adding predefined pedal (now on change)
+            // Event listener para adicionar pedal predefinido (versão corrigida)
             predefinedPedalSelect.addEventListener('change', () => {
                 const selectedOptionValue = predefinedPedalSelect.value;
                 if (!selectedOptionValue) {
                     return; // Do nothing if the placeholder option is selected
                 }
                 const pedalData = JSON.parse(selectedOptionValue);
-                console.log(pedalData);
+                
+                // Converte as dimensões para números uma única vez
+                const pedalWidthCm = inchesToCm(pedalData.Width);
+                const pedalHeightCm = inchesToCm(pedalData.Height);
+
                 const newPedal = {
                     id: Date.now(),
                     name: pedalData.Name,
-                    width: inchesToCm(pedalData.Width).toFixed(1),
-                    height: inchesToCm(pedalData.Height).toFixed(1),
-                    x: (effectiveBoardWidthCm / 2) - (inchesToCm(pedalData.Width).toFixed(1) / 2), // Position in center
-                    y: (effectiveBoardHeightCm / 2) - (inchesToCm(pedalData.Height).toFixed(1) / 2), // Position in center
-                    color: pedalData.color || '#3498db', // Use predefined color or default
+                    width: pedalWidthCm,  // Armazena como NÚMERO
+                    height: pedalHeightCm, // Armazena como NÚMERO
+                    x: (effectiveBoardWidthCm / 2) - (pedalWidthCm / 2), // Calcula a posição com números
+                    y: (effectiveBoardHeightCm / 2) - (pedalHeightCm / 2), // Calcula a posição com números
+                    color: pedalData.color || '#3498db',
                     isBoard: false,
                     currentRotationAngle: 0
                 };
                 elements.push(newPedal);
-                drawElements();
+                drawElements(); // A função drawElements já formata com .toFixed() para exibir
                 saveElements();
                 predefinedPedalSelect.value = ""; // Reset dropdown to placeholder after selection
             });
