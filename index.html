@@ -752,6 +752,11 @@
                     const angle = el.currentRotationAngle;
 
                     // Rotate the four corners to find the bounding box of the rotated element
+                    const rotatedP1 = rotatePoint(p1.x, p1.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP2 = rotatePoint(p2.x, p2.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP3 = rotatePoint(p3.x, p3.y, rotCenterX, rotCenterY, angle);
+                    const rotatedP4 = rotatePoint(p4.x, p4.y, rotCenterX, rotCenterY, angle);
+
                     const allX = [rotatedP1.x, rotatedP2.x, rotatedP3.x, rotatedP4.x];
                     const allY = [rotatedP1.y, rotatedP2.y, rotatedP3.y, rotatedP4.y];
 
